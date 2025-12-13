@@ -1,47 +1,32 @@
 <%- include('../layout/header') %>
+  <h1 class="text-3xl font-bold mb-4">About Us</h1>
+  
+  <div class="prose max-w-none">
+    <p class="mb-4">
+      Welcome to our application! We are dedicated to providing the best service possible.
+    </p>
+    
+    <h2 class="text-2xl font-semibold mt-6 mb-3">Our Mission</h2>
+    <p class="mb-4">
+      Our mission is to create innovative solutions that help people achieve their goals.
+    </p>
+    
+    <h2 class="text-2xl font-semibold mt-6 mb-3">Our Team</h2>
+    <p class="mb-4">
+      We have a talented team of professionals who are passionate about what they do.
+    </p>
+    
+    <% if (typeof user !== 'undefined' && user) { %>
+      <div class="mt-6 p-4 bg-blue-100 rounded-lg">
+        <h3 class="text-lg font-semibold">Thank you for being a member, <%= user.name || user.uname %>!</h3>
+        <p>We appreciate your continued support.</p>
+      </div>
+    <% } else { %>
+      <div class="mt-6 p-4 bg-yellow-100 rounded-lg">
+        <h3 class="text-lg font-semibold">Join our community!</h3>
+        <p><a href="/auth/signup" class="text-blue-600 hover:underline">Sign up</a> today to become part of our community.</p>
+      </div>
+    <% } %>
+  </div>
 
-<div class="max-w-6xl mx-auto p-6 space-y-12">
-
-  <!-- Page Title -->
-  <section class="text-center">
-    <h1 class="text-4xl font-bold mb-4">About Us</h1>
-    <p class="text-gray-600 text-lg">Learn more about our mission and values.</p>
-  </section>
-
-  <!-- Feature Cards -->
-  <section class="grid md:grid-cols-3 gap-6">
-    <!-- Card 1 -->
-    <div class="bg-white rounded-xl shadow-md p-6 hover:shadow-xl transition-shadow duration-300">
-      <!-- Heroicon -->
-      <svg class="w-10 h-10 text-blue-500 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-          d="M13 16h-1v-4h-1m4-4h-3m-4 0H4v12h16V4h-5"/>
-      </svg>
-      <h3 class="text-xl font-semibold mb-2">Our Mission</h3>
-      <p class="text-gray-600">We aim to deliver the best user experience with modern web technologies.</p>
-    </div>
-
-    <!-- Card 2 -->
-    <div class="bg-white rounded-xl shadow-md p-6 hover:shadow-xl transition-shadow duration-300">
-      <svg class="w-10 h-10 text-green-500 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-          d="M9 12l2 2 4-4m5 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
-      </svg>
-      <h3 class="text-xl font-semibold mb-2">Our Vision</h3>
-      <p class="text-gray-600">To empower developers and designers with easy-to-use components and layouts.</p>
-    </div>
-
-    <!-- Card 3 -->
-    <div class="bg-white rounded-xl shadow-md p-6 hover:shadow-xl transition-shadow duration-300">
-      <svg class="w-10 h-10 text-purple-500 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-          d="M5 13l4 4L19 7"/>
-      </svg>
-      <h3 class="text-xl font-semibold mb-2">Our Values</h3>
-      <p class="text-gray-600">Integrity, collaboration, and innovation are at the core of everything we do.</p>
-    </div>
-  </section>
-
-</div>
-
-<%- include('../layout/footer') %>
+  <%- include('../layout/footer') %>

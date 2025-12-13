@@ -18,6 +18,15 @@ model User {
   createdAt DateTime @default(now())
   email     String   @unique
   name      String?
-  uname     String
+  uname     String   @unique
   password  String
+  tokens    Token[]
+}
+
+model Token {
+  id          Int      @id @default(autoincrement())
+  userId      Int
+  refreshToken String   @unique
+  expiresAt   DateTime
+  user        User     @relation(fields: [userId], references: [id])
 }

@@ -3,6 +3,7 @@ node_modules
 .env
 .env.local
 .env.*.local
+.env.example
 
 /generated/prisma
 
@@ -21,3 +22,5 @@ Thumbs.db
 # IDE files
 .vscode/
 .idea/
+
+.qoder/
