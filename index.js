@@ -1,11 +1,15 @@
 const express = require('express');
 const path = require('path');
 const cookieParser = require('cookie-parser');
+const securityHeaders = require('./server/middleware/securityHeaders');
 const { csrfTokenMiddleware } = require('./server/middleware/csrfMiddleware');
 const { optionalAuth } = require('./server/middleware/authMiddleware');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
+
+// Security middleware
+app.use(securityHeaders);
 
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
