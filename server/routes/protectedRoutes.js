@@ -9,6 +9,9 @@ router.use(authenticate);
 // Apply CSRF protection to all routes
 router.use(csrfProtection);
 
+// Excel automation routes
+const excelRoutes = require('./excel-automation/excelRoutes');
+router.use('/excel', excelRoutes);
 // Profile page
 router.get('/profile', (req, res) => {
   // Check for success messages

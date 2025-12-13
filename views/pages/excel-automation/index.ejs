@@ -1,0 +1,121 @@
+<%- include('../../layout/header') %>
+
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+  <div class="bg-white rounded-lg shadow-md overflow-hidden">
+    <div class="px-6 py-4 border-b border-gray-200">
+      <h2 class="text-2xl font-bold text-gray-800">Excel Automation</h2>
+      <p class="mt-1 text-sm text-gray-600">Upload, view, and edit Excel files directly in your browser</p>
+    </div>
+    
+    <div class="px-6 py-4">
+      <!-- Hidden CSRF token for AJAX requests -->
+      <% if (typeof _csrf !== 'undefined' && _csrf) { %>
+        <input type="hidden" id="csrf-token" value="<%= _csrf %>">
+      <% } %>
+      
+      <!-- Upload Section -->
+      <div id="upload-section" class="mb-8">
+        <div class="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center hover:border-blue-400 transition-colors duration-200">
+          <div class="flex flex-col items-center justify-center">
+            <svg class="mx-auto h-12 w-12 text-gray-400" stroke="currentColor" fill="none" viewBox="0 0 48 48" aria-hidden="true">
+              <path d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+            </svg>
+            <div class="flex text-sm text-gray-600 mt-4">
+              <label for="excel-file" class="relative cursor-pointer bg-white rounded-md font-medium text-blue-600 hover:text-blue-500 focus-within:outline-none focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-blue-500">
+                <span>Upload an Excel file</span>
+                <input id="excel-file" name="excelFile" type="file" class="sr-only" accept=".xlsx,.xls">
+              </label>
+              <p class="pl-1">or drag and drop</p>
+            </div>
+            <p class="text-xs text-gray-500 mt-2">XLSX or XLS files up to 5MB</p>
+          </div>
+        </div>
+        
+        <!-- Progress Indicator -->
+        <div id="progress-container" class="mt-4 hidden">
+          <div class="flex justify-between text-sm text-gray-600 mb-1">
+            <span>Uploading...</span>
+            <span id="progress-percent">0%</span>
+          </div>
+          <div class="w-full bg-gray-200 rounded-full h-2.5">
+            <div id="progress-bar" class="bg-blue-600 h-2.5 rounded-full" style="width: 0%"></div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Reset Button (Hidden by default) -->
+      <div id="reset-section" class="mb-4 hidden">
+        <button id="reset-upload" class="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md shadow-sm text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+          Choose Another File
+        </button>
+      </div>
+      
+      <!-- Status Indicators -->
+      <div id="status-container" class="mb-4 hidden">
+        <div id="success-message" class="hidden bg-green-50 text-green-800 p-4 rounded-md">
+          <div class="flex">
+            <div class="flex-shrink-0">
+              <svg class="h-5 w-5 text-green-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+              </svg>
+            </div>
+            <div class="ml-3">
+              <p class="text-sm font-medium">Success! File processed successfully.</p>
+            </div>
+          </div>
+        </div>
+        
+        <div id="error-message" class="hidden bg-red-50 text-red-800 p-4 rounded-md">
+          <div class="flex">
+            <div class="flex-shrink-0">
+              <svg class="h-5 w-5 text-red-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
+              </svg>
+            </div>
+            <div class="ml-3">
+              <p class="text-sm font-medium" id="error-text">Error message will appear here.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Sheet Selection (Hidden by default) -->
+      <div id="sheet-selection" class="mb-4 hidden">
+        <label for="sheet-select" class="block text-sm font-medium text-gray-700">Select Worksheet:</label>
+        <select id="sheet-select" class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md">
+          <!-- Options will be populated by JavaScript -->
+        </select>
+      </div>
+      
+      <!-- Toolbar -->
+      <div id="toolbar" class="flex justify-between items-center mb-4 hidden">
+        <div>
+          <h3 class="text-lg font-medium text-gray-900" id="file-name">Uploaded File</h3>
+          <p class="text-sm text-gray-500" id="file-info">Rows: 0, Columns: 0</p>
+        </div>
+        <div class="flex space-x-2">
+          <button id="save-btn" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+            Save Changes
+          </button>
+          <button id="export-btn" class="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md shadow-sm text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+            Export to Excel
+          </button>
+        </div>
+      </div>
+      
+      <!-- Table Container -->
+      <div id="table-container" class="hidden border rounded-lg overflow-hidden">
+        <div class="overflow-x-auto max-h-96 overflow-y-auto">
+          <table id="excel-table" class="min-w-full divide-y divide-gray-200">
+            <!-- Table will be populated by JavaScript -->
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="/js/excel-automation/excel.js"></script>
+<script src="/js/excel-automation/tableEditor.js"></script>
+
+<%- include('../../layout/footer') %>

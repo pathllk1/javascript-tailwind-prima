@@ -1,6 +1,7 @@
 const express = require('express');
 const path = require('path');
 const cookieParser = require('cookie-parser');
+const session = require('express-session');
 const securityHeaders = require('./server/middleware/securityHeaders');
 const cspNonce = require('./server/middleware/cspNonce');
 const { inputSanitization } = require('./server/middleware/inputSanitization');
@@ -15,6 +16,17 @@ app.use(cspNonce);
 
 // Security middleware
 app.use(securityHeaders);
+
+// Session middleware
+app.use(session({
+  secret: process.env.SESSION_SECRET || 'your-secret-key-here',
+  resave: false,
+  saveUninitialized: false,
+  cookie: {
+    secure: process.env.NODE_ENV === 'production',
+    maxAge: 1000 * 60 * 60 * 24 // 24 hours
+  }
+}));
 
 // Input sanitization middleware
 app.use(inputSanitization);

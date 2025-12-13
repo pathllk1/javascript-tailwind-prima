@@ -1,0 +1,55 @@
+<!-- Reusable table component for Excel data -->
+<%
+  // Expected data structure:
+  // {
+  //   headers: ['Column 1', 'Column 2', ...],
+  //   rows: [
+  //     ['Row 1 Col 1', 'Row 1 Col 2', ...],
+  //     ['Row 2 Col 1', 'Row 2 Col 2', ...],
+  //     ...
+  //   ]
+  // }
+%>
+
+<% if (typeof data !== 'undefined' && data.headers && data.rows) { %>
+  <thead class="bg-gray-50">
+    <tr>
+      <% data.headers.forEach(function(header, index) { %>
+        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+          <%= header %>
+        </th>
+      <% }); %>
+    </tr>
+  </thead>
+  <tbody class="bg-white divide-y divide-gray-200">
+    <% data.rows.forEach(function(row, rowIndex) { %>
+      <tr>
+        <% row.forEach(function(cell, cellIndex) { %>
+          <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 editable-cell" 
+              data-row="<%= rowIndex %>" 
+              data-col="<%= cellIndex %>">
+            <div class="cell-content"><%= cell %></div>
+            <input type="text" 
+                   class="cell-input hidden w-full px-2 py-1 border rounded focus:outline-none focus:ring-1 focus:ring-blue-500" 
+                   value="<%= cell %>" />
+          </td>
+        <% }); %>
+      </tr>
+    <% }); %>
+  </tbody>
+<% } else { %>
+  <thead>
+    <tr>
+      <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+        No data available
+      </th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td class="px-6 py-4 text-sm text-gray-500">
+        Please upload an Excel file to view data.
+      </td>
+    </tr>
+  </tbody>
+<% } %>
