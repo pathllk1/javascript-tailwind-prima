@@ -1,0 +1,78 @@
+<%- include('../layout/header') %>
+
+<div class="max-w-4xl mx-auto p-4 sm:p-6">
+  <h1 class="text-3xl font-bold mb-6 text-gray-800">Components Test</h1>
+  
+  <h2 class="text-2xl font-bold mb-4">Alert Component</h2>
+  <%- include('../components/alert', {type: 'success', message: 'Success alert!'}) %>
+  <%- include('../components/alert', {type: 'error', message: 'Error alert!'}) %>
+  <%- include('../components/alert', {type: 'warning', message: 'Warning alert!'}) %>
+  <%- include('../components/alert', {type: 'info', message: 'Info alert!'}) %>
+  <%- include('../components/alert', {type: 'success', message: 'Dismissible alert!', dismissible: true}) %>
+  
+  <h2 class="text-2xl font-bold mb-4 mt-8">Button Component</h2>
+  <div class="flex flex-wrap gap-4 mb-4">
+    <%- include('../components/button', {type: 'primary', text: 'Primary'}) %>
+    <%- include('../components/button', {type: 'secondary', text: 'Secondary'}) %>
+    <%- include('../components/button', {type: 'success', text: 'Success'}) %>
+    <%- include('../components/button', {type: 'danger', text: 'Danger'}) %>
+  </div>
+  
+  <div class="flex flex-wrap gap-4 mb-4">
+    <%- include('../components/button', {type: 'primary', size: 'small', text: 'Small'}) %>
+    <%- include('../components/button', {type: 'primary', size: 'medium', text: 'Medium'}) %>
+    <%- include('../components/button', {type: 'primary', size: 'large', text: 'Large'}) %>
+  </div>
+  
+  <div class="flex flex-wrap gap-4 mb-4">
+    <%- include('../components/button', {type: 'primary', text: 'Normal Button'}) %>
+    <%- include('../components/button', {type: 'primary', text: 'Disabled Button', disabled: true}) %>
+    <%- include('../components/button', {type: 'primary', text: 'Submit Button', submit: true}) %>
+  </div>
+  
+  <div class="flex flex-wrap gap-4 mb-4">
+    <%- include('../components/button', {type: 'primary', text: 'Link Button', href: '/'}) %>
+  </div>
+  
+  <h2 class="text-2xl font-bold mb-4 mt-8">Form Field Component</h2>
+  <div class="bg-white rounded-lg shadow-md overflow-hidden mb-6">
+    <div class="p-6">
+      <form class="space-y-4">
+        <%- include('../components/formField', {name: 'test-text', label: 'Text Field', type: 'text', placeholder: 'Enter text'}) %>
+        <%- include('../components/formField', {name: 'test-email', label: 'Email Field', type: 'email', placeholder: 'Enter email'}) %>
+        <%- include('../components/formField', {name: 'test-password', label: 'Password Field', type: 'password', placeholder: 'Enter password'}) %>
+        <%- include('../components/formField', {name: 'test-textarea', label: 'Textarea', type: 'textarea', placeholder: 'Enter message'}) %>
+        <%- include('../components/formField', {name: 'test-required', label: 'Required Field', type: 'text', required: true}) %>
+        <%- include('../components/formField', {name: 'test-error', label: 'Field with Error', type: 'text', error: 'This field is required'}) %>
+        <%- include('../components/button', {type: 'primary', text: 'Submit', submit: true}) %>
+      </form>
+    </div>
+  </div>
+  
+  <h2 class="text-2xl font-bold mb-4 mt-8">Breadcrumb Component</h2>
+  <%- include('../components/breadcrumb', {items: [
+    {text: 'Home', href: '/'},
+    {text: 'Test', href: '/test'},
+    {text: 'Current Page', href: ''}
+  ]}) %>
+  
+  <h2 class="text-2xl font-bold mb-4 mt-8">Card Component</h2>
+  <%- include('../components/card', {title: 'Card Title', children: '<p>This is the card content.</p>', footer: '<small>Card footer</small>'}) %>
+</div>
+
+<script>
+// Auto-hide alerts after 5 seconds
+document.addEventListener('DOMContentLoaded', function() {
+  const alerts = document.querySelectorAll('.alert-dismissible');
+  alerts.forEach(alert => {
+    setTimeout(() => {
+      alert.style.opacity = '0';
+      setTimeout(() => {
+        alert.remove();
+      }, 300);
+    }, 5000);
+  });
+});
+</script>
+
+<%- include('../layout/footer') %>

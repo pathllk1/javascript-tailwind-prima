@@ -1,0 +1,157 @@
+<%- include('../layout/header') %>
+
+<div class="max-w-4xl mx-auto p-4 sm:p-6">
+  <h1 class="text-3xl font-bold mb-6 text-gray-800">Components Demo</h1>
+  
+  <!-- Breadcrumb -->
+  <%- include('../components/breadcrumb', {items: [
+    {text: 'Home', href: '/'},
+    {text: 'Components Demo', href: '/components-demo'}
+  ]}) %>
+  
+  <!-- Alerts Section -->
+  <div class="bg-white rounded-lg shadow-md overflow-hidden mb-6">
+    <div class="px-6 py-4 border-b border-gray-200">
+      <h3 class="text-lg font-medium text-gray-900">Alerts</h3>
+    </div>
+    <div class="p-6">
+      <div class="space-y-4">
+        <%- include('../components/alert', {type: 'success', message: 'This is a success alert!'}) %>
+        <%- include('../components/alert', {type: 'error', message: 'This is an error alert!'}) %>
+        <%- include('../components/alert', {type: 'warning', message: 'This is a warning alert!'}) %>
+        <%- include('../components/alert', {type: 'info', message: 'This is an info alert!'}) %>
+        <%- include('../components/alert', {type: 'success', message: 'This is a dismissible alert!', dismissible: true}) %>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Buttons Section -->
+  <div class="bg-white rounded-lg shadow-md overflow-hidden mb-6">
+    <div class="px-6 py-4 border-b border-gray-200">
+      <h3 class="text-lg font-medium text-gray-900">Buttons</h3>
+    </div>
+    <div class="p-6">
+      <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
+        <%- include('../components/button', {type: 'primary', text: 'Primary'}) %>
+        <%- include('../components/button', {type: 'secondary', text: 'Secondary'}) %>
+        <%- include('../components/button', {type: 'success', text: 'Success'}) %>
+        <%- include('../components/button', {type: 'danger', text: 'Danger'}) %>
+        <%- include('../components/button', {type: 'primary', size: 'small', text: 'Small'}) %>
+        <%- include('../components/button', {type: 'primary', size: 'medium', text: 'Medium'}) %>
+        <%- include('../components/button', {type: 'primary', size: 'large', text: 'Large'}) %>
+        <%- include('../components/button', {type: 'primary', text: 'Disabled', disabled: true}) %>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Link Buttons Section -->
+  <div class="bg-white rounded-lg shadow-md overflow-hidden mb-6">
+    <div class="px-6 py-4 border-b border-gray-200">
+      <h3 class="text-lg font-medium text-gray-900">Link Buttons</h3>
+    </div>
+    <div class="p-6">
+      <div class="flex flex-wrap gap-4">
+        <%- include('../components/button', {type: 'primary', text: 'Home', href: '/'}) %>
+        <%- include('../components/button', {type: 'secondary', text: 'About', href: '/about'}) %>
+        <%- include('../components/button', {type: 'success', text: 'Contact', href: '/contact'}) %>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Form Fields Section -->
+  <div class="bg-white rounded-lg shadow-md overflow-hidden mb-6">
+    <div class="px-6 py-4 border-b border-gray-200">
+      <h3 class="text-lg font-medium text-gray-900">Form Fields</h3>
+    </div>
+    <div class="p-6">
+      <form class="space-y-4">
+        <%- include('../components/formField', {name: 'demo-text', label: 'Text Field', type: 'text', placeholder: 'Enter text'}) %>
+        <%- include('../components/formField', {name: 'demo-email', label: 'Email Field', type: 'email', placeholder: 'Enter email'}) %>
+        <%- include('../components/formField', {name: 'demo-password', label: 'Password Field', type: 'password', placeholder: 'Enter password'}) %>
+        <%- include('../components/formField', {name: 'demo-textarea', label: 'Textarea', type: 'textarea', placeholder: 'Enter message'}) %>
+        <%- include('../components/formField', {name: 'demo-required', label: 'Required Field', type: 'text', required: true}) %>
+        <%- include('../components/formField', {name: 'demo-error', label: 'Field with Error', type: 'text', error: 'This field is required'}) %>
+        <%- include('../components/button', {type: 'primary', text: 'Submit', submit: true}) %>
+      </form>
+    </div>
+  </div>
+  
+  <!-- Modal Trigger -->
+  <div class="bg-white rounded-lg shadow-md overflow-hidden mb-6">
+    <div class="px-6 py-4 border-b border-gray-200">
+      <h3 class="text-lg font-medium text-gray-900">Modal</h3>
+    </div>
+    <div class="p-6">
+      <div>
+        <%- include('../components/button', {type: 'primary', text: 'Open Modal', id: 'openModalButton'}) %>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Component -->
+<div id="demoModal" class="fixed inset-0 z-50 overflow-y-auto hidden">
+  <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+    <!-- Background overlay -->
+    <div class="fixed inset-0 transition-opacity" aria-hidden="true">
+      <div class="absolute inset-0 bg-gray-500 opacity-75"></div>
+    </div>
+    
+    <!-- Modal container -->
+    <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+    
+    <div class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
+      <!-- Modal header -->
+      <div class="px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse items-center justify-between border-b">
+        <h3 class="text-lg leading-6 font-medium text-gray-900">Demo Modal</h3>
+        <button type="button" class="close-modal text-gray-400 hover:text-gray-500 focus:outline-none" data-modal="demoModal">
+          <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
+      </div>
+      
+      <!-- Modal body -->
+      <div class="px-4 py-5 sm:p-6">
+        <p>This is a demo modal component. You can put any content here.</p>
+        <div class="mt-4">
+          <%- include('../components/button', {type: 'primary', text: 'Close', classes: 'close-modal'}) %>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// Modal functionality
+document.addEventListener('DOMContentLoaded', function() {
+  // Open modal
+  const openModalButton = document.getElementById('openModalButton');
+  if (openModalButton) {
+    openModalButton.addEventListener('click', function() {
+      document.getElementById('demoModal').classList.remove('hidden');
+    });
+  }
+  
+  // Close modal with close button
+  const closeModalButtons = document.querySelectorAll('.close-modal');
+  closeModalButtons.forEach(button => {
+    button.addEventListener('click', function() {
+      document.getElementById('demoModal').classList.add('hidden');
+    });
+  });
+  
+  // Auto-hide alerts after 5 seconds
+  const alerts = document.querySelectorAll('.alert-dismissible');
+  alerts.forEach(alert => {
+    setTimeout(() => {
+      alert.style.opacity = '0';
+      setTimeout(() => {
+        alert.remove();
+      }, 300);
+    }, 5000);
+  });
+});
+</script>
+
+<%- include('../layout/footer') %>

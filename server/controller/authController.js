@@ -3,8 +3,8 @@ const { prisma } = require('../../lib/prisma');
 
 // Render login page
 exports.loginPage = (req, res) => {
-  // Check if there's a success message from signup
-  const success = req.query.success === 'true' ? 'Account created successfully! You can now log in.' : null;
+  // Check if there's a success message from login
+  const success = req.query.login_success === 'true' ? 'You have been logged in successfully!' : null;
   res.render('pages/login', { title: 'Login', error: null, success });
 };
 
@@ -55,8 +55,8 @@ exports.login = async (req, res) => {
       maxAge: 30 * 24 * 60 * 60 * 1000 // 30 days
     });
     
-    // Redirect to profile page after successful login
-    res.redirect('/profile');
+    // Redirect to profile page with success message
+    res.redirect('/profile?login_success=true');
   } catch (error) {
     console.error('Login error:', error);
     res.render('pages/login', { title: 'Login', error: 'An error occurred during login', success: null });

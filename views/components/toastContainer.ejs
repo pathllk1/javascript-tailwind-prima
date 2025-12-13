@@ -1,0 +1,23 @@
+<%# 
+Toast Container component
+Include this at the bottom of any page that needs to show toast notifications
+%>
+
+<script nonce="<%= typeof cspNonce !== 'undefined' ? cspNonce : '' %>">
+  // Show toast notifications on page load if messages exist
+  document.addEventListener('DOMContentLoaded', function() {
+    // Get messages from hidden divs
+    const successDiv = document.getElementById('success-message');
+    const errorDiv = document.getElementById('error-message');
+    
+    // Show success toast if exists
+    if (successDiv && successDiv.textContent.trim() !== '') {
+      showToast(successDiv.textContent.trim(), 'success');
+    }
+    
+    // Show error toast if exists
+    if (errorDiv && errorDiv.textContent.trim() !== '') {
+      showToast(errorDiv.textContent.trim(), 'error');
+    }
+  });
+</script>

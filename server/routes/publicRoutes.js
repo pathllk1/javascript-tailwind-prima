@@ -3,12 +3,23 @@ const router = express.Router();
 const publicController = require('../controller/publicController');
 const { csrfProtection } = require('../middleware/csrfMiddleware');
 
-// GET routes (no CSRF protection needed)
-router.get('/', publicController.home);
-router.get('/about', publicController.about);
-router.get('/contact', publicController.contact);
+// Apply CSRF protection to all routes
+router.use(csrfProtection);
 
-// POST route for contact form (with CSRF protection)
-router.post('/contact', csrfProtection, publicController.contactPost);
+// Home page
+router.get('/', publicController.home);
+
+// About page
+router.get('/about', (req, res) => {
+  res.render('pages/about', { 
+    title: 'About Us', 
+    user: req.user || null,
+    tokenExpiration: req.tokenExpiration || null
+  });
+});
+
+// Contact page
+router.get('/contact', publicController.contact);
+router.post('/contact', publicController.contactPost);
 
 module.exports = router;

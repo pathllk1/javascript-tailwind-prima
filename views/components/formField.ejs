@@ -1,0 +1,53 @@
+<%#
+Form field component for consistent form inputs
+Parameters:
+- name: Field name (required)
+- label: Field label (optional)
+- type: Input type (text, email, password, etc.) (optional, default: 'text')
+- placeholder: Placeholder text (optional)
+- value: Field value (optional)
+- error: Error message (optional)
+- required: Boolean for required field (optional, default: false)
+- classes: Additional classes (optional)
+%>
+
+<% const fieldName = typeof name !== 'undefined' ? name : ''; %>
+<% const fieldLabel = typeof label !== 'undefined' ? label : ''; %>
+<% const fieldType = typeof type !== 'undefined' ? type : 'text'; %>
+<% const fieldPlaceholder = typeof placeholder !== 'undefined' ? placeholder : ''; %>
+<% const fieldValue = typeof value !== 'undefined' ? value : ''; %>
+<% const fieldError = typeof error !== 'undefined' ? error : ''; %>
+<% const isRequired = typeof required !== 'undefined' ? required : false; %>
+<% const additionalClasses = typeof classes !== 'undefined' ? classes : ''; %>
+
+<div class="mb-4 <%= additionalClasses %>">
+  <% if (fieldLabel) { %>
+    <label for="<%= fieldName %>" class="block text-gray-700 text-sm font-bold mb-2">
+      <%= fieldLabel %><% if (isRequired) { %> <span class="text-red-500">*</span><% } %>
+    </label>
+  <% } %>
+  
+  <% if (fieldType === 'textarea') { %>
+    <textarea
+      id="<%= fieldName %>"
+      name="<%= fieldName %>"
+      placeholder="<%= fieldPlaceholder %>"
+      class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline <%= fieldError ? 'border-red-500' : '' %>"
+      <%= isRequired ? 'required' : '' %>
+    ><%= fieldValue %></textarea>
+  <% } else { %>
+    <input
+      type="<%= fieldType %>"
+      id="<%= fieldName %>"
+      name="<%= fieldName %>"
+      placeholder="<%= fieldPlaceholder %>"
+      value="<%= fieldValue %>"
+      class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline <%= fieldError ? 'border-red-500' : '' %>"
+      <%= isRequired ? 'required' : '' %>
+    >
+  <% } %>
+  
+  <% if (fieldError) { %>
+    <p class="text-red-500 text-xs italic mt-1"><%= fieldError %></p>
+  <% } %>
+</div>

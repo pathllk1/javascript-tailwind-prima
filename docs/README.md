@@ -9,7 +9,8 @@ This document provides comprehensive information about the application, includin
 4. [Setup Instructions](#setup-instructions)
 5. [API Documentation](#api-documentation)
 6. [Security Analysis](#security-analysis)
-7. [Additional Documentation](#additional-documentation)
+7. [Reusable Components](#reusable-components)
+8. [Additional Documentation](#additional-documentation)
 
 ## Overview
 This is a secure web application built with Node.js, Express.js, and PostgreSQL. It features a complete authentication system with JWT tokens, CSRF protection, and comprehensive security measures.
@@ -38,6 +39,7 @@ This is a secure web application built with Node.js, Express.js, and PostgreSQL.
 ### 4. Directory Structure
 - Organized file structure following best practices
 - Separation of concerns with dedicated folders for controllers, routes, middleware, and utilities
+- Reusable UI components in `views/components/` directory
 
 ### 5. UI JavaScript
 - Client-side JavaScript for enhanced user experience
@@ -83,6 +85,20 @@ For detailed API documentation, see [API_DOCUMENTATION.md](API_DOCUMENTATION.md)
 
 ## Security Analysis
 For comprehensive security analysis, see [SECURITY_ANALYSIS.md](SECURITY_ANALYSIS.md).
+
+## Reusable Components
+The application now includes a set of reusable UI components located in `views/components/`:
+
+- **Alert**: Styled alert messages with different types
+- **Button**: Consistent buttons with various styles and sizes
+- **Card**: Content containers with optional header and footer
+- **Form Field**: Consistent form inputs with labels and error handling
+- **Navbar**: Navigation bar with user authentication status
+- **Footer**: Consistent footer across all pages
+- **Modal**: Overlay dialogs for additional content
+- **Breadcrumb**: Navigation hierarchy for better UX
+
+For detailed usage instructions, see [COMPONENTS_GUIDE.md](COMPONENTS_GUIDE.md).
 
 ## Additional Documentation
 

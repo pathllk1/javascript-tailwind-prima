@@ -1,0 +1,52 @@
+<%# 
+Alert component for displaying messages
+Parameters:
+- type: 'success', 'error', 'warning', 'info'
+- message: The message to display
+- dismissible: boolean (optional, default: false)
+- toast: boolean (optional, default: false) - whether to display as a toast notification
+%>
+
+<% if (typeof message !== 'undefined' && message) { %>
+  <% const alertType = typeof type !== 'undefined' ? type : 'info'; %>
+  <% const isDismissible = typeof dismissible !== 'undefined' ? dismissible : false; %>
+  <% const isToast = typeof toast !== 'undefined' ? toast : false; %>
+  <% const alertClasses = {
+    success: 'bg-green-100 border-green-400 text-green-700',
+    error: 'bg-red-100 border-red-400 text-red-700',
+    warning: 'bg-yellow-100 border-yellow-400 text-yellow-700',
+    info: 'bg-blue-100 border-blue-400 text-blue-700'
+  }; %>
+  
+  <% if (isToast) { %>
+    <div class="toast-alert fixed top-4 right-4 z-50 px-4 py-3 rounded-lg shadow-lg transform transition-all duration-300 <%= 
+      alertType === 'success' ? 'bg-green-500 text-white' :
+      alertType === 'error' ? 'bg-red-500 text-white' :
+      alertType === 'warning' ? 'bg-yellow-500 text-white' :
+      'bg-blue-500 text-white'
+    %>">
+      <div class="flex items-center">
+        <span class="flex-1"><%= message %></span>
+        <% if (isDismissible) { %>
+          <button class="ml-4 text-white hover:text-gray-200 focus:outline-none" onclick="this.parentElement.parentElement.remove()">
+            <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+              <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"></path>
+            </svg>
+          </button>
+        <% } %>
+      </div>
+    </div>
+  <% } else { %>
+    <div class="alert <%= alertClasses[alertType] %> border px-4 py-3 rounded relative mb-4 <%= isDismissible ? 'alert-dismissible' : '' %>" role="alert">
+      <span class="block sm:inline"><%= message %></span>
+      <% if (isDismissible) { %>
+        <button type="button" class="absolute top-0 bottom-0 right-0 px-4 py-3" onclick="this.parentElement.remove()">
+          <svg class="fill-current h-6 w-6 text-black" role="button" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
+            <title>Close</title>
+            <path d="M14.348 14.849a1.2 1.2 0 0 1-1.697 0L10 11.819l-2.651 3.029a1.2 1.2 0 1 1-1.697-1.697l2.758-3.15-2.759-3.152a1.2 1.2 0 1 1 1.697-1.697L10 8.183l2.651-3.031a1.2 1.2 0 1 1 1.697 1.697l-2.758 3.152 2.758 3.15a1.2 1.2 0 0 1 0 1.698z"/>
+          </svg>
+        </button>
+      <% } %>
+    </div>
+  <% } %>
+<% } %>

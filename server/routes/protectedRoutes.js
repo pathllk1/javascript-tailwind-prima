@@ -11,10 +11,14 @@ router.use(csrfProtection);
 
 // Profile page
 router.get('/profile', (req, res) => {
+  // Check for success messages
+  const success = req.query.login_success === 'true' ? 'You have been logged in successfully!' : null;
+  
   res.render('pages/profile', { 
     title: 'User Profile', 
     user: req.user,
-    tokenExpiration: req.tokenExpiration
+    tokenExpiration: req.tokenExpiration,
+    success: success
   });
 });
 
