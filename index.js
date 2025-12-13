@@ -2,14 +2,22 @@ const express = require('express');
 const path = require('path');
 const cookieParser = require('cookie-parser');
 const securityHeaders = require('./server/middleware/securityHeaders');
+const cspNonce = require('./server/middleware/cspNonce');
+const { inputSanitization } = require('./server/middleware/inputSanitization');
 const { csrfTokenMiddleware } = require('./server/middleware/csrfMiddleware');
 const { optionalAuth } = require('./server/middleware/authMiddleware');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+// CSP nonce middleware (must be before securityHeaders)
+app.use(cspNonce);
+
 // Security middleware
 app.use(securityHeaders);
+
+// Input sanitization middleware
+app.use(inputSanitization);
 
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));

@@ -8,11 +8,10 @@ const securityHeaders = helmet({
       // Default sources for most directives
       defaultSrc: ["'self'"],
       
-      // Script sources - allow self and inline scripts (needed for existing JS)
+      // Script sources - allow self and nonce-based inline scripts
       scriptSrc: [
         "'self'", 
-        "'unsafe-inline'"  // Needed for existing inline scripts and event handlers
-        // Removed 'unsafe-eval' as it's not used in the application and poses security risks
+        (req, res) => `'nonce-${res.locals.cspNonce}'`  // Use nonce for inline scripts
       ],
       
       // Style sources - allow self and inline styles (needed for TailwindCSS)
