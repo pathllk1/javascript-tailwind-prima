@@ -1,62 +1,32 @@
-const ExcelJS = require('exceljs');
+const XLSX = require('xlsx');
 const fs = require('fs');
+const path = require('path');
 
-async function generateTestExcel() {
-  // Create a new workbook
-  const workbook = new ExcelJS.Workbook();
-  
-  // Add a worksheet
-  const worksheet = workbook.addWorksheet('Test Data');
-  
-  // Add headers
-  worksheet.addRow(['Name', 'Age', 'City', 'Occupation']);
-  
-  // Add sample data
-  worksheet.addRow(['John Doe', 30, 'New York', 'Engineer']);
-  worksheet.addRow(['Jane Smith', 25, 'Los Angeles', 'Designer']);
-  worksheet.addRow(['Bob Johnson', 35, 'Chicago', 'Manager']);
-  worksheet.addRow(['Alice Brown', 28, 'Houston', 'Developer']);
-  worksheet.addRow(['Charlie Wilson', 32, 'Phoenix', 'Analyst']);
-  
-  // Apply styling to header row
-  worksheet.getRow(1).eachCell((cell) => {
-    cell.font = { bold: true };
-    cell.fill = {
-      type: 'pattern',
-      pattern: 'solid',
-      fgColor: { argb: 'FFCCCCCC' }
-    };
-    cell.border = {
-      top: { style: 'thin' },
-      left: { style: 'thin' },
-      bottom: { style: 'thin' },
-      right: { style: 'thin' }
-    };
-  });
-  
-  // Add borders to all cells
-  worksheet.eachRow((row, rowNumber) => {
-    if (rowNumber > 1) {
-      row.eachCell((cell) => {
-        cell.border = {
-          top: { style: 'thin' },
-          left: { style: 'thin' },
-          bottom: { style: 'thin' },
-          right: { style: 'thin' }
-        };
-      });
-    }
-  });
-  
-  // Auto-fit columns
-  worksheet.columns.forEach(column => {
-    column.width = 15;
-  });
-  
-  // Write to file
-  await workbook.xlsx.writeFile('test-data/sample.xlsx');
-  console.log('Test Excel file created successfully!');
-}
+// Read CSV file
+const csvFilePath = path.join(__dirname, 'test-data', 'sample.csv');
+const csvData = fs.readFileSync(csvFilePath, 'utf8');
 
-// Run the function
-generateTestExcel().catch(console.error);
+// Parse CSV data
+const lines = csvData.trim().split('\n');
+const headers = lines[0].split(',');
+const rows = lines.slice(1).map(line => {
+  const values = line.split(',');
+  const row = {};
+  headers.forEach((header, index) => {
+    row[header] = values[index];
+  });
+  return row;
+});
+
+// Create workbook and worksheet
+const wb = XLSX.utils.book_new();
+const ws = XLSX.utils.json_to_sheet(rows);
+
+// Add worksheet to workbook
+XLSX.utils.book_append_sheet(wb, ws, 'Employees');
+
+// Write to file
+const xlsxFilePath = path.join(__dirname, 'test-data', 'sample.xlsx');
+XLSX.writeFile(wb, xlsxFilePath);
+
+console.log('Test Excel file created successfully at:', xlsxFilePath);

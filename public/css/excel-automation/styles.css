@@ -27,24 +27,45 @@
   transition: width 0.3s ease-in-out;
 }
 
-/* Table styling */
-.excel-table-container {
+/* Table wrapper for proper scrolling */
+.excel-table-wrapper {
   max-height: 400px;
   overflow: auto;
-  border: 1px solid #e5e7eb;
-  border-radius: 0.5rem;
+  position: relative;
 }
 
+/* Table styling */
 .excel-table {
   min-width: 100%;
   border-collapse: collapse;
+  width: 100%;
 }
 
-.excel-table th {
+.excel-table thead th {
   position: sticky;
   top: 0;
-  background-color: #f9fafb;
   z-index: 10;
+  background: linear-gradient(to right, #3b82f6, #4f46e5);
+  color: white;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+  padding: 0.25rem 0.75rem;
+  text-align: left;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.025em;
+  border: 1px solid #d1d5db;
+  cursor: pointer;
+}
+
+.excel-table thead th:hover {
+  background: linear-gradient(to right, #2563eb, #4338ca);
+}
+
+.excel-table tbody td {
+  padding: 0.25rem 0.75rem;
+  font-size: 0.75rem;
+  border: 1px solid #d1d5db;
 }
 
 .excel-table td.editable-cell {
@@ -53,10 +74,11 @@
 }
 
 .excel-table .cell-content {
-  padding: 0.5rem 1rem;
-  min-height: 2rem;
+  padding: 0.25rem 0.75rem;
+  min-height: 1.5rem;
   display: flex;
   align-items: center;
+  font-size: 0.75rem;
 }
 
 .excel-table .cell-input {
@@ -66,8 +88,38 @@
   width: 100%;
   height: 100%;
   border: 2px solid #3b82f6;
-  padding: 0.5rem 1rem;
+  padding: 0.25rem 0.75rem;
   box-sizing: border-box;
+  font-size: 0.75rem;
+}
+
+/* Hover effect for rows */
+.excel-table tbody tr:hover {
+  background-color: #ecfccb; /* yellow-green color */
+  transition: background-color 0.15s ease-in-out;
+}
+
+/* Sort indicators */
+.sort-indicator {
+  font-size: 0.75rem;
+  opacity: 0.7;
+  margin-left: 0.25rem;
+}
+
+.sort-indicator.text-blue-200 {
+  opacity: 1;
+  color: #bfdbfe;
+}
+
+/* Filter icon */
+.filter-icon {
+  margin-left: 0.25rem;
+  cursor: pointer;
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.filter-icon:hover {
+  color: white;
 }
 
 /* Status indicators */
@@ -123,13 +175,21 @@
 
 /* Responsive design */
 @media (max-width: 768px) {
-  .excel-table-container {
+  .excel-table-wrapper {
     max-height: 300px;
   }
   
-  .excel-table th,
-  .excel-table td {
+  .excel-table thead th,
+  .excel-table tbody td {
     padding: 0.25rem 0.5rem;
-    font-size: 0.875rem;
+    font-size: 0.75rem;
+  }
+  
+  .excel-table .cell-content {
+    padding: 0.25rem 0.5rem;
+  }
+  
+  .excel-table .cell-input {
+    padding: 0.25rem 0.5rem;
   }
 }

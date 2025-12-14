@@ -1,121 +1,123 @@
 <%- include('../layout/header') %>
 
-<h1 class="text-3xl font-bold mb-4">Contact Us</h1>
-
-<!-- Hidden divs to pass messages to JavaScript -->
-<% if (typeof success !== 'undefined' && success) { %>
-  <div id="success-message" class="hidden"><%= success %></div>
-<% } else { %>
-  <div id="success-message" class="hidden"></div>
-<% } %>
-
-<% if (typeof error !== 'undefined' && error) { %>
-  <div id="error-message" class="hidden"><%= error %></div>
-<% } else { %>
-  <div id="error-message" class="hidden"></div>
-<% } %>
-
-<div class="max-w-2xl mx-auto">
-  <p class="mb-6 text-gray-700">
-    Have questions or feedback? Reach out to us using the form below or through our contact information.
-  </p>
+<div class="w-full p-4 sm:p-6">
+  <h1 class="text-3xl font-bold mb-4">Contact Us</h1>
   
-  <div class="bg-white rounded-lg shadow-md p-6 mb-8">
-    <h2 class="text-2xl font-semibold mb-4">Send us a message</h2>
+  <!-- Hidden divs to pass messages to JavaScript -->
+  <% if (typeof success !== 'undefined' && success) { %>
+    <div id="success-message" class="hidden"><%= success %></div>
+  <% } else { %>
+    <div id="success-message" class="hidden"></div>
+  <% } %>
+  
+  <% if (typeof error !== 'undefined' && error) { %>
+    <div id="error-message" class="hidden"><%= error %></div>
+  <% } else { %>
+    <div id="error-message" class="hidden"></div>
+  <% } %>
+  
+  <div class="w-full">
+    <p class="mb-6 text-gray-700">
+      Have questions or feedback? Reach out to us using the form below or through our contact information.
+    </p>
     
-    <form action="/contact" method="POST">
-      <div class="mb-4">
-        <label for="name" class="block text-gray-700 text-sm font-bold mb-2">Name</label>
-        <input 
-          type="text" 
-          id="name" 
-          name="name" 
-          required
-          class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-        >
-      </div>
+    <div class="bg-white rounded-lg shadow-md p-6 mb-8">
+      <h2 class="text-2xl font-semibold mb-4">Send us a message</h2>
       
-      <div class="mb-4">
-        <label for="email" class="block text-gray-700 text-sm font-bold mb-2">Email</label>
-        <input 
-          type="email" 
-          id="email" 
-          name="email" 
-          required
-          class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-        >
-      </div>
-      
-      <div class="mb-6">
-        <label for="message" class="block text-gray-700 text-sm font-bold mb-2">Message</label>
-        <textarea 
-          id="message" 
-          name="message" 
-          rows="5" 
-          required
-          class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-        ></textarea>
-      </div>
-      
-      <div class="flex items-center justify-between">
-        <button 
-          type="submit"
-          class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
-        >
-          Send Message
-        </button>
-      </div>
-    </form>
-  </div>
-  
-  <div class="grid md:grid-cols-2 gap-6">
-    <div class="bg-white rounded-lg shadow-md p-6">
-      <h3 class="text-xl font-semibold mb-3">Contact Information</h3>
-      <ul class="space-y-2">
-        <li class="flex items-start">
-          <svg class="w-5 h-5 text-blue-500 mr-2 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"></path>
-          </svg>
-          <span>+1 (555) 123-4567</span>
-        </li>
-        <li class="flex items-start">
-          <svg class="w-5 h-5 text-blue-500 mr-2 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path>
-          </svg>
-          <span>contact@example.com</span>
-        </li>
-        <li class="flex items-start">
-          <svg class="w-5 h-5 text-blue-500 mr-2 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
-          </svg>
-          <span>123 Main Street, City, State 12345</span>
-        </li>
-      </ul>
+      <form action="/contact" method="POST">
+        <div class="mb-4">
+          <label for="name" class="block text-gray-700 text-sm font-bold mb-2">Name</label>
+          <input 
+            type="text" 
+            id="name" 
+            name="name" 
+            required
+            class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+          >
+        </div>
+        
+        <div class="mb-4">
+          <label for="email" class="block text-gray-700 text-sm font-bold mb-2">Email</label>
+          <input 
+            type="email" 
+            id="email" 
+            name="email" 
+            required
+            class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+          >
+        </div>
+        
+        <div class="mb-6">
+          <label for="message" class="block text-gray-700 text-sm font-bold mb-2">Message</label>
+          <textarea 
+            id="message" 
+            name="message" 
+            rows="5" 
+            required
+            class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+          ></textarea>
+        </div>
+        
+        <div class="flex items-center justify-between">
+          <button 
+            type="submit"
+            class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
+          >
+            Send Message
+          </button>
+        </div>
+      </form>
     </div>
     
-    <div class="bg-white rounded-lg shadow-md p-6">
-      <h3 class="text-xl font-semibold mb-3">Business Hours</h3>
-      <ul class="space-y-2">
-        <li class="flex justify-between">
-          <span>Monday - Friday:</span>
-          <span>9:00 AM - 5:00 PM</span>
-        </li>
-        <li class="flex justify-between">
-          <span>Saturday:</span>
-          <span>10:00 AM - 2:00 PM</span>
-        </li>
-        <li class="flex justify-between">
-          <span>Sunday:</span>
-          <span>Closed</span>
-        </li>
-      </ul>
+    <div class="grid md:grid-cols-2 gap-6">
+      <div class="bg-white rounded-lg shadow-md p-6">
+        <h3 class="text-xl font-semibold mb-3">Contact Information</h3>
+        <ul class="space-y-2">
+          <li class="flex items-start">
+            <svg class="w-5 h-5 text-blue-500 mr-2 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"></path>
+            </svg>
+            <span>+1 (555) 123-4567</span>
+          </li>
+          <li class="flex items-start">
+            <svg class="w-5 h-5 text-blue-500 mr-2 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path>
+            </svg>
+            <span>contact@example.com</span>
+          </li>
+          <li class="flex items-start">
+            <svg class="w-5 h-5 text-blue-500 mr-2 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
+            </svg>
+            <span>123 Main Street, City, State 12345</span>
+          </li>
+        </ul>
+      </div>
       
-      <% if (typeof user !== 'undefined' && user) { %>
-        <div class="mt-4 p-3 bg-green-100 rounded">
-          <p class="text-green-800">Thank you for being a valued member, <%= user.name || user.uname %>!</p>
-        </div>
-      <% } %>
+      <div class="bg-white rounded-lg shadow-md p-6">
+        <h3 class="text-xl font-semibold mb-3">Business Hours</h3>
+        <ul class="space-y-2">
+          <li class="flex justify-between">
+            <span>Monday - Friday:</span>
+            <span>9:00 AM - 5:00 PM</span>
+          </li>
+          <li class="flex justify-between">
+            <span>Saturday:</span>
+            <span>10:00 AM - 2:00 PM</span>
+          </li>
+          <li class="flex justify-between">
+            <span>Sunday:</span>
+            <span>Closed</span>
+          </li>
+        </ul>
+        
+        <% if (typeof user !== 'undefined' && user) { %>
+          <div class="mt-4 p-3 bg-green-100 rounded">
+            <p class="text-green-800">Thank you for being a valued member, <%= user.name || user.uname %>!</p>
+          </div>
+        <% } %>
+      </div>
     </div>
   </div>
 </div>

@@ -93,7 +93,23 @@ function worksheetToJson(worksheet) {
       const rowData = [];
       for (let j = 0; j < result.columnCount; j++) {
         const cellValue = row[j + 1]; // ExcelJS uses 1-based indexing
-        rowData.push(cellValue !== undefined ? cellValue : '');
+        
+        // Preserve data types as much as possible
+        let processedValue = cellValue;
+        if (cellValue !== undefined) {
+          // Handle different ExcelJS cell types
+          if (cellValue instanceof Date) {
+            // Format dates as ISO strings
+            processedValue = cellValue.toISOString();
+          } else if (typeof cellValue === 'object' && cellValue !== null) {
+            // For other objects, convert to string
+            processedValue = String(cellValue);
+          }
+        } else {
+          processedValue = '';
+        }
+        
+        rowData.push(processedValue);
       }
       result.rows.push(rowData);
     }
@@ -131,7 +147,7 @@ exports.jsonToWorksheet = (worksheet, jsonData) => {
           top: { style: 'thin' },
           left: { style: 'thin' },
           bottom: { style: 'thin' },
-          right: { style: 'thin' }
+          right: { style: 'thin' },
         };
         
         // Header row styling

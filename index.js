@@ -7,6 +7,7 @@ const cspNonce = require('./server/middleware/cspNonce');
 const { inputSanitization } = require('./server/middleware/inputSanitization');
 const { csrfTokenMiddleware } = require('./server/middleware/csrfMiddleware');
 const { optionalAuth } = require('./server/middleware/authMiddleware');
+const ajaxResponseMiddleware = require('./server/middleware/ajaxResponseMiddleware');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -30,6 +31,9 @@ app.use(session({
 
 // Input sanitization middleware
 app.use(inputSanitization);
+
+// AJAX response middleware
+app.use(ajaxResponseMiddleware);
 
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));

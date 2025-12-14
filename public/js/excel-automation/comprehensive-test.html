@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Data Type Detection Test</title>
+    <script src="/js/excel-automation/dataTypeDetector.js"></script>
+</head>
+<body>
+    <div style="padding: 20px; font-family: Arial, sans-serif;">
+        <h1>Data Type Detection Test</h1>
+        <button onclick="runComprehensiveTest()">Run Comprehensive Test</button>
+        <div id="results" style="margin-top: 20px; white-space: pre-wrap; font-family: monospace;"></div>
+    </div>
+
+    <script>
+        function runComprehensiveTest() {
+            const results = [];
+            
+            // Test 1: Basic type detection
+            results.push("=== Test 1: Basic Type Detection ===");
+            const testValues = [
+                { value: "John", expected: "text" },
+                { value: 25, expected: "number" },
+                { value: "1998-05-15", expected: "date" },
+                { value: true, expected: "boolean" },
+                { value: "true", expected: "boolean" },
+                { value: "not-a-number", expected: "text" },
+                { value: "", expected: "text" },
+                { value: null, expected: "text" },
+                { value: undefined, expected: "text" },
+                { value: "2024-13-45", expected: "text" }
+            ];
+            
+            testValues.forEach((test, index) => {
+                const detected = dataTypeDetector.detectValueType(test.value);
+                const passed = detected === test.expected;
+                results.push(`${index + 1}. "${test.value}" -> Expected: ${test.expected}, Got: ${detected} ${passed ? '✓' : '✗'}`);
+            });
+            
+            // Test 2: Utility functions
+            results.push("\n=== Test 2: Utility Functions ===");
+            results.push(`isNumber(42): ${dataTypeDetector.isNumber(42)} (Expected: true) ${dataTypeDetector.isNumber(42) === true ? '✓' : '✗'}`);
+            results.push(`isNumber('42'): ${dataTypeDetector.isNumber('42')} (Expected: true) ${dataTypeDetector.isNumber('42') === true ? '✓' : '✗'}`);
+            results.push(`isNumber('hello'): ${dataTypeDetector.isNumber('hello')} (Expected: false) ${dataTypeDetector.isNumber('hello') === false ? '✓' : '✗'}`);
+            
+            results.push(`isValidDate('2024-01-15'): ${dataTypeDetector.isValidDate('2024-01-15')} (Expected: true) ${dataTypeDetector.isValidDate('2024-01-15') === true ? '✓' : '✗'}`);
+            results.push(`isValidDate('invalid'): ${dataTypeDetector.isValidDate('invalid')} (Expected: false) ${dataTypeDetector.isValidDate('invalid') === false ? '✓' : '✗'}`);
+            
+            results.push(`isBoolean(true): ${dataTypeDetector.isBoolean(true)} (Expected: true) ${dataTypeDetector.isBoolean(true) === true ? '✓' : '✗'}`);
+            results.push(`isBoolean('false'): ${dataTypeDetector.isBoolean('false')} (Expected: true) ${dataTypeDetector.isBoolean('false') === true ? '✓' : '✗'}`);
+            results.push(`isBoolean('yes'): ${dataTypeDetector.isBoolean('yes')} (Expected: false) ${dataTypeDetector.isBoolean('yes') === false ? '✓' : '✗'}`);
+            
+            // Test 3: Column type detection
+            results.push("\n=== Test 3: Column Type Detection ===");
+            const testData = {
+                headers: ["Name", "Age", "Birth Date", "Active", "Score"],
+                rows: [
+                    ["John Doe", 25, "1998-05-15", true, 85.5],
+                    ["Jane Smith", 30, "1993-12-01", false, 92.0],
+                    ["Bob Johnson", 35, "1988-03-22", true, 78.3],
+                    ["Alice Brown", 28, "1995-07-10", true, 95.7],
+                    ["Charlie Wilson", 42, "1981-11-30", false, 88.2],
+                    ["", "", "", "", ""], // Empty row for testing
+                    ["Diana Lee", 31, "invalid-date", "yes", "not-a-number"]
+                ],
+                rowCount: 7,
+                columnCount: 5
+            };
+            
+            const columnMetadata = dataTypeDetector.analyzeAllColumns(testData);
+            
+            columnMetadata.forEach((metadata, index) => {
+                results.push(`\nColumn ${index + 1}: ${metadata.header}`);
+                results.push(`  Detected Type: ${metadata.type}`);
+                results.push(`  Empty Count: ${metadata.stats.emptyCount}`);
+                results.push(`  Total Count: ${metadata.stats.totalCount}`);
+                
+                if (metadata.stats.min !== null) {
+                    results.push(`  Min Value: ${metadata.stats.min}`);
+                }
+                
+                if (metadata.stats.max !== null) {
+                    results.push(`  Max Value: ${metadata.stats.max}`);
+                }
+                
+                results.push(`  Unique Values Count: ${metadata.stats.uniqueValues.size}`);
+            });
+            
+            // Display results
+            document.getElementById('results').textContent = results.join('\n');
+        }
+    </script>
+</body>
+</html>

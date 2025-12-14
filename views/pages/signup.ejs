@@ -1,36 +1,38 @@
 <%- include('../layout/header') %>
 
-<div class="max-w-md mx-auto mt-10 p-6 bg-white rounded-lg shadow-md">
-  <h2 class="text-2xl font-bold mb-6 text-center">Sign Up</h2>
-  
-  <!-- Hidden divs to pass messages to JavaScript -->
-  <% if (typeof success !== 'undefined' && success) { %>
-    <div id="success-message" class="hidden"><%= success %></div>
-  <% } else { %>
-    <div id="success-message" class="hidden"></div>
-  <% } %>
-  
-  <% if (typeof error !== 'undefined' && error) { %>
-    <div id="error-message" class="hidden"><%= error %></div>
-  <% } else { %>
-    <div id="error-message" class="hidden"></div>
-  <% } %>
-  
-  <form action="/auth/signup" method="POST">
-    <%- include('../components/formField', {name: 'name', label: 'Full Name', type: 'text', required: true}) %>
+<div class="w-full p-4 sm:p-6 flex justify-center items-center mt-10">
+  <div class="w-full max-w-md p-6 bg-white rounded-lg shadow-md">
+    <h2 class="text-2xl font-bold mb-6 text-center">Sign Up</h2>
     
-    <%- include('../components/formField', {name: 'uname', label: 'Username', type: 'text', required: true}) %>
+    <!-- Hidden divs to pass messages to JavaScript -->
+    <% if (typeof success !== 'undefined' && success) { %>
+      <div id="success-message" class="hidden"><%= success %></div>
+    <% } else { %>
+      <div id="success-message" class="hidden"></div>
+    <% } %>
     
-    <%- include('../components/formField', {name: 'email', label: 'Email', type: 'email', required: true}) %>
+    <% if (typeof error !== 'undefined' && error) { %>
+      <div id="error-message" class="hidden"><%= error %></div>
+    <% } else { %>
+      <div id="error-message" class="hidden"></div>
+    <% } %>
     
-    <%- include('../components/formField', {name: 'password', label: 'Password', type: 'password', required: true}) %>
-    
-    <div class="flex items-center justify-between">
-      <%- include('../components/button', {type: 'primary', text: 'Sign Up', submit: true}) %>
+    <form action="/auth/signup" method="POST">
+      <%- include('../components/formField', {name: 'name', label: 'Full Name', type: 'text', required: true}) %>
       
-      <%- include('../components/button', {type: 'secondary', text: 'Login', href: '/auth/login'}) %>
-    </div>
-  </form>
+      <%- include('../components/formField', {name: 'uname', label: 'Username', type: 'text', required: true}) %>
+      
+      <%- include('../components/formField', {name: 'email', label: 'Email', type: 'email', required: true}) %>
+      
+      <%- include('../components/formField', {name: 'password', label: 'Password', type: 'password', required: true}) %>
+      
+      <div class="flex items-center justify-between">
+        <%- include('../components/button', {type: 'primary', text: 'Sign Up', submit: true}) %>
+        
+        <%- include('../components/button', {type: 'secondary', text: 'Login', href: '/auth/login'}) %>
+      </div>
+    </form>
+  </div>
 </div>
 
 <%- include('../layout/footer') %>

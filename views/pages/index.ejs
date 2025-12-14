@@ -1,28 +1,30 @@
 <%- include('../layout/header') %>
 
-<h1 class="text-3xl font-bold underline">Hello World!</h1>
-
-<!-- Hidden div to pass success message to JavaScript -->
-<% if (typeof success !== 'undefined' && success) { %>
-  <div id="success-message" class="hidden"><%= success %></div>
-<% } else { %>
-  <div id="success-message" class="hidden"></div>
-<% } %>
-
-<h2 class="text-xl font-semibold mb-4">Welcome to my homepage</h2>
-<p class="mb-2">This is a sample layout using EJS and Tailwind CSS.</p>
-<p>Change the content here and the header/footer remain consistent.</p>
-
-<% if (typeof user !== 'undefined' && user) { %>
-  <div class="mt-6 p-4 bg-blue-100 rounded-lg">
-    <h3 class="text-lg font-semibold">Welcome back, <%= user.name || user.uname %>!</h3>
-    <p>You are successfully logged in.</p>
-  </div>
-<% } else { %>
-  <div class="mt-6 p-4 bg-green-100 rounded-lg">
-    <h3 class="text-lg font-semibold">Welcome to MyApp!</h3>
-    <p>Please <a href="/auth/login" class="text-blue-600 hover:underline">login</a> or <a href="/auth/signup" class="text-blue-600 hover:underline">sign up</a> to access all features.</p>
-  </div>
-<% } %>
+<div class="w-full p-4 sm:p-6">
+  <h1 class="text-3xl font-bold underline">Hello World!</h1>
+  
+  <!-- Hidden div to pass success message to JavaScript -->
+  <% if (typeof success !== 'undefined' && success) { %>
+    <div id="success-message" class="hidden"><%= success %></div>
+  <% } else { %>
+    <div id="success-message" class="hidden"></div>
+  <% } %>
+  
+  <h2 class="text-xl font-semibold mb-4">Welcome to my homepage</h2>
+  <p class="mb-2">This is a sample layout using EJS and Tailwind CSS.</p>
+  <p>Change the content here and the header/footer remain consistent.</p>
+  
+  <% if (typeof user !== 'undefined' && user) { %>
+    <div class="mt-6 p-4 bg-blue-100 rounded-lg">
+      <h3 class="text-lg font-semibold">Welcome back, <%= user.name || user.uname %>!</h3>
+      <p>You are successfully logged in.</p>
+    </div>
+  <% } else { %>
+    <div class="mt-6 p-4 bg-green-100 rounded-lg">
+      <h3 class="text-lg font-semibold">Welcome to MyApp!</h3>
+      <p>Please <a href="/auth/login" class="text-blue-600 hover:underline">login</a> or <a href="/auth/signup" class="text-blue-600 hover:underline">sign up</a> to access all features.</p>
+    </div>
+  <% } %>
+</div>
 
 <%- include('../layout/footer') %>

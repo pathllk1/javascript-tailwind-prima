@@ -1,6 +1,7 @@
 // Client-side JavaScript for Excel automation functionality
 
-document.addEventListener('DOMContentLoaded', function() {
+// Create a reusable function for initialization
+function initializeExcelHandlers() {
   // Get DOM elements
   const fileInput = document.getElementById('excel-file');
   const uploadSection = document.getElementById('upload-section');
@@ -20,6 +21,18 @@ document.addEventListener('DOMContentLoaded', function() {
   const resetButton = document.getElementById('reset-upload');
   const sheetSelection = document.getElementById('sheet-selection');
   const sheetSelect = document.getElementById('sheet-select');
+  
+  // Exit if not on Excel page
+  if (!fileInput) return;
+  
+  // Remove old listeners to prevent duplicates
+  fileInput.removeEventListener('change', handleFileSelect);
+  if (resetButton) {
+    resetButton.removeEventListener('click', resetUpload);
+  }
+  if (sheetSelect) {
+    sheetSelect.removeEventListener('change', handleSheetSelection);
+  }
   
   // Handle file selection
   fileInput.addEventListener('change', handleFileSelect);
@@ -49,20 +62,24 @@ document.addEventListener('DOMContentLoaded', function() {
   function setupDragAndDrop() {
     // Prevent default drag behaviors
     ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+      uploadSection.removeEventListener(eventName, preventDefaults, false);
       uploadSection.addEventListener(eventName, preventDefaults, false);
       document.body.addEventListener(eventName, preventDefaults, false);
     });
     
     // Highlight drop area when item is dragged over it
     ['dragenter', 'dragover'].forEach(eventName => {
+      uploadSection.removeEventListener(eventName, highlight, false);
       uploadSection.addEventListener(eventName, highlight, false);
     });
     
     ['dragleave', 'drop'].forEach(eventName => {
+      uploadSection.removeEventListener(eventName, unhighlight, false);
       uploadSection.addEventListener(eventName, unhighlight, false);
     });
     
     // Handle dropped files
+    uploadSection.removeEventListener('drop', handleDrop, false);
     uploadSection.addEventListener('drop', handleDrop, false);
   }
   
@@ -220,19 +237,19 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Hide other sections
     sheetSelection.classList.add('hidden');
-    toolbar.classList.add('hidden');
-    tableContainer.classList.add('hidden');
+    if (toolbar) toolbar.classList.add('hidden');
+    if (tableContainer) tableContainer.classList.add('hidden');
   }
   
   // Function to display Excel data in table
   function displayExcelData(data, originalFileName, sheetNames) {
     // Update file info
-    fileName.textContent = originalFileName || 'Uploaded File';
-    fileInfo.textContent = `Rows: ${data.rowCount}, Columns: ${data.columnCount}`;
+    if (fileName) fileName.textContent = originalFileName || 'Uploaded File';
+    if (fileInfo) fileInfo.textContent = `Rows: ${data.rowCount}, Columns: ${data.columnCount}`;
     
     // Show toolbar and table container
-    toolbar.classList.remove('hidden');
-    tableContainer.classList.remove('hidden');
+    if (toolbar) toolbar.classList.remove('hidden');
+    if (tableContainer) tableContainer.classList.remove('hidden');
     
     // Handle sheet selection if multiple sheets
     if (sheetNames && sheetNames.length > 1) {
@@ -269,7 +286,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const selectedSheet = sheetSelect.value;
     
     // Show loading state
-    tableContainer.classList.add('opacity-50');
+    if (tableContainer) tableContainer.classList.add('opacity-50');
     
     // Get CSRF token
     const csrfToken = csrfTokenInput && csrfTokenInput.value ? csrfTokenInput.value : null;
@@ -291,7 +308,7 @@ document.addEventListener('DOMContentLoaded', function() {
           renderTable('excel-table', data.data);
           
           // Update file info
-          fileInfo.textContent = `Rows: ${data.data.rowCount}, Columns: ${data.data.columnCount}`;
+          if (fileInfo) fileInfo.textContent = `Rows: ${data.data.rowCount}, Columns: ${data.data.columnCount}`;
         }
       } else {
         showError(data.error || 'Error selecting sheet');
@@ -303,7 +320,19 @@ document.addEventListener('DOMContentLoaded', function() {
     })
     .finally(() => {
       // Remove loading state
-      tableContainer.classList.remove('opacity-50');
+      if (tableContainer) tableContainer.classList.remove('opacity-50');
     });
+  }
+}
+
+// Initialize on first load
+document.addEventListener('DOMContentLoaded', initializeExcelHandlers);
+
+// Re-initialize after silent navigation
+window.addEventListener('page-changed', (e) => {
+  const { url } = e.detail;
+  if (url && url.includes('/excel')) {
+    // Use setTimeout to ensure DOM is updated
+    setTimeout(initializeExcelHandlers, 50);
   }
 });
