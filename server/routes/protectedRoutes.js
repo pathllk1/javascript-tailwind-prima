@@ -1,13 +1,14 @@
 const express = require('express');
 const router = express.Router();
 const { authenticate } = require('../middleware/authMiddleware');
-const { csrfProtection } = require('../middleware/csrfMiddleware');
+const { csrfProtection, csrfTokenMiddleware } = require('../middleware/csrfMiddleware');
 
 // Apply authentication middleware to all routes in this file
 router.use(authenticate);
 
 // Apply CSRF protection to all routes
 router.use(csrfProtection);
+router.use(csrfTokenMiddleware);
 
 // Excel automation routes
 const excelRoutes = require('./excel-automation/excelRoutes');
@@ -21,6 +22,7 @@ router.get('/profile', (req, res) => {
     title: 'User Profile', 
     user: req.user,
     tokenExpiration: req.tokenExpiration,
+    csrfToken: res.locals.csrfToken,
     success: success
   });
 });
@@ -30,7 +32,8 @@ router.get('/settings', (req, res) => {
   res.render('pages/settings', { 
     title: 'Account Settings', 
     user: req.user,
-    tokenExpiration: req.tokenExpiration
+    tokenExpiration: req.tokenExpiration,
+    csrfToken: res.locals.csrfToken
   });
 });
 

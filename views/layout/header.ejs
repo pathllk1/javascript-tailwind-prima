@@ -3,12 +3,19 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <% if (typeof csrfToken !== 'undefined' && csrfToken) { %>
+    <meta name="csrf-token" content="<%= csrfToken %>">
+  <% } %>
+  <% if (typeof tokenExpiration !== 'undefined' && tokenExpiration) { %>
+    <meta name="token-expiration" content="<%= tokenExpiration %>">
+  <% } %>
   <link rel="stylesheet" href="/css/output.css">
   <script src="/js/auth.js" defer></script>
   <script src="/js/dropdown.js" defer></script>
   <script src="/js/timer.js" defer></script>
   <script src="/js/toast.js" defer></script>
   <script src="/js/silent-navigation.js" defer></script>
+  <script src="/js/interceptor.js" defer></script>
   <title><%= typeof title !== 'undefined' ? title : 'MyApp' %></title>
 </head>
 <body class="bg-gray-100">

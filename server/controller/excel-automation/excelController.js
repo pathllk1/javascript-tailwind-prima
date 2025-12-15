@@ -8,7 +8,8 @@ exports.showExcelPage = (req, res) => {
   res.render('pages/excel-automation/index', {
     title: 'Excel Automation',
     user: req.user,
-    _csrf: req.csrfToken ? req.csrfToken() : null
+    _csrf: res.locals.csrfToken,
+    tokenExpiration: req.tokenExpiration
   });
 };
 
@@ -22,15 +23,15 @@ exports.uploadExcel = async (req, res) => {
       });
     }
 
-    // Process the Excel file (default to first sheet)
-    const result = await excelProcessor.processExcelFile(req.file.path);
+    // Process the Excel file from buffer (default to first sheet)
+    const result = await excelProcessor.processExcelBuffer(req.file.buffer, req.file.originalname);
     
     // Store data in session for later use
     req.session.excelData = result.data;
     req.session.originalFileName = req.file.originalname;
     req.session.sheetNames = result.sheetNames;
     req.session.selectedSheet = result.selectedSheet;
-    req.session.filePath = req.file.path; // Store file path for sheet switching
+    req.session.fileBuffer = req.file.buffer; // Store buffer for sheet switching
     
     res.json({ 
       success: true, 
@@ -60,15 +61,16 @@ exports.selectSheet = async (req, res) => {
       });
     }
     
-    if (!req.session.filePath) {
+    // Check if we have file data in memory
+    if (!req.session.fileBuffer) {
       return res.status(400).json({ 
         success: false, 
-        error: 'No Excel file uploaded' 
+        error: 'No Excel file data available' 
       });
     }
     
-    // Process the specific sheet
-    const result = await excelProcessor.processExcelFile(req.session.filePath, sheetName);
+    // Process the specific sheet from buffer
+    const result = await excelProcessor.processExcelBuffer(req.session.fileBuffer, req.session.originalFileName, sheetName);
     
     // Update session data
     req.session.excelData = result.data;
@@ -84,6 +86,46 @@ exports.selectSheet = async (req, res) => {
     res.status(500).json({ 
       success: false, 
       error: 'Error selecting sheet: ' + error.message 
+    });
+  }
+};
+
+// Process Excel file in memory
+exports.processExcelInMemory = async (req, res) => {
+  try {
+    // Check if file was uploaded
+    if (!req.file) {
+      return res.status(400).json({ 
+        success: false, 
+        error: 'No file uploaded' 
+      });
+    }
+    
+    // Get filename from uploaded file or header
+    const fileName = req.file.originalname || req.headers['x-file-name'] || 'uploaded_file.xlsx';
+    
+    // Process the Excel data in memory
+    const result = await excelProcessor.processExcelBuffer(req.file.buffer, fileName);
+    
+    // Store data in session for later use
+    req.session.excelData = result.data;
+    req.session.originalFileName = fileName;
+    req.session.sheetNames = result.sheetNames;
+    req.session.selectedSheet = result.selectedSheet;
+    req.session.fileBuffer = req.file.buffer; // Store buffer for sheet switching
+    
+    res.json({ 
+      success: true, 
+      data: result.data,
+      fileName: fileName,
+      sheetNames: result.sheetNames,
+      selectedSheet: result.selectedSheet
+    });
+  } catch (error) {
+    console.error('Error processing Excel file:', error);
+    res.status(500).json({ 
+      success: false, 
+      error: 'Error processing Excel file: ' + error.message 
     });
   }
 };

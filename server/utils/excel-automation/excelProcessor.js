@@ -60,6 +60,50 @@ exports.processExcelFile = async (filePath, sheetName = null) => {
 };
 
 /**
+ * Process a specific sheet from an Excel buffer and convert it to JSON
+ * @param {ArrayBuffer} buffer - Buffer containing Excel file data
+ * @param {string} fileName - Original file name
+ * @param {string|null} sheetName - Name of the sheet to process (null for first sheet)
+ * @returns {Promise<Object>} - JSON representation of the Excel data with sheet info
+ */
+exports.processExcelBuffer = async (buffer, fileName, sheetName = null) => {
+  try {
+    // Load the workbook from buffer
+    const workbook = new ExcelJS.Workbook();
+    await workbook.xlsx.load(buffer);
+    
+    // Get the worksheet
+    let worksheet;
+    if (sheetName) {
+      worksheet = workbook.getWorksheet(sheetName);
+      if (!worksheet) {
+        throw new Error(`Sheet '${sheetName}' not found in the Excel file`);
+      }
+    } else {
+      // Get the first worksheet if no sheet name specified
+      worksheet = workbook.worksheets[0];
+      if (!worksheet) {
+        throw new Error('No worksheet found in the Excel file');
+      }
+    }
+    
+    // Convert worksheet to JSON
+    const jsonData = worksheetToJson(worksheet);
+    
+    // Get all sheet names
+    const sheetNames = workbook.worksheets.map(sheet => sheet.name);
+    
+    return {
+      data: jsonData,
+      sheetNames: sheetNames,
+      selectedSheet: worksheet.name
+    };
+  } catch (error) {
+    throw new Error('Error processing Excel buffer: ' + error.message);
+  }
+};
+
+/**
  * Convert a worksheet to JSON format
  * @param {ExcelJS.Worksheet} worksheet - The worksheet to convert
  * @returns {Object} - JSON representation with headers and rows

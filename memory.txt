@@ -1,0 +1,7 @@
+1. Remember to run context7 AND sequential-thinking tools first
+2. implement what user asked
+3. run context7 AND sequential-thinking MCP TOOL whenever require
+4. do not create any test file unless confirmation from user
+5. create/update proper docs in docs folder
+6. Remember to run sequential-thinking and context7 tools last
+7. make sure always strict safety and caution

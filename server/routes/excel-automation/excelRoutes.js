@@ -4,18 +4,10 @@ const router = express.Router();
 const excelController = require('../../controller/excel-automation/excelController');
 const multer = require('multer');
 const path = require('path');
+const { csrfProtection, csrfTokenMiddleware } = require('../../middleware/csrfMiddleware');
 
-// Configure multer for file uploads
-const storage = multer.diskStorage({
-  destination: function (req, file, cb) {
-    cb(null, 'uploads/');
-  },
-  filename: function (req, file, cb) {
-    // Generate unique filename
-    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-    cb(null, file.fieldname + '-' + uniqueSuffix + path.extname(file.originalname));
-  }
-});
+// Configure multer for file uploads in memory
+const storage = multer.memoryStorage();
 
 const upload = multer({ 
   storage: storage,
@@ -34,18 +26,21 @@ const upload = multer({
 });
 
 // Excel automation page
-router.get('/', excelController.showExcelPage);
+router.get('/', csrfTokenMiddleware, excelController.showExcelPage);
 
 // Upload Excel file
-router.post('/upload', upload.single('excelFile'), excelController.uploadExcel);
+router.post('/upload', csrfProtection, upload.single('excelFile'), excelController.uploadExcel);
+
+// Process Excel file in memory
+router.post('/process', csrfProtection, upload.single('excelFile'), excelController.processExcelInMemory);
 
 // Select sheet
-router.post('/select-sheet', excelController.selectSheet);
+router.post('/select-sheet', csrfProtection, excelController.selectSheet);
 
 // Save edited data
-router.post('/save', excelController.saveChanges);
+router.post('/save', csrfProtection, excelController.saveChanges);
 
 // Export to Excel
-router.get('/export/:id', excelController.exportExcel);
+router.get('/export/:id', csrfTokenMiddleware, excelController.exportExcel);
 
 module.exports = router;

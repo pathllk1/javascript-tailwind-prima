@@ -565,6 +565,9 @@ function updateGlobalFilterBar() {
     const activeFilters = filterEngine.getActiveFilters();
     const totalRows = currentTableData ? currentTableData.rows.length : 0;
     
+    // Update visible rows based on filters
+    updateVisibleRows();
+    
     // Update row count
     updateRowCount(visibleRows.length, totalRows);
     

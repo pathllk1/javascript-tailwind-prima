@@ -157,14 +157,9 @@ class ExcelSilentNavigationHandler {
     // Show progress
     this.showProgress();
 
-    // Create FormData object
+    // Create FormData
     const formData = new FormData();
     formData.append('excelFile', file);
-
-    // Add CSRF token if available
-    if (csrfTokenInput) {
-      formData.append('_csrf', csrfTokenInput.value);
-    }
 
     // Create XMLHttpRequest
     const xhr = new XMLHttpRequest();
@@ -183,17 +178,17 @@ class ExcelSilentNavigationHandler {
         try {
           const response = JSON.parse(xhr.responseText);
           if (response.success) {
-            this.showSuccess('File uploaded successfully!');
+            this.showSuccess('File processed successfully!');
             // Display the data in the table
             this.displayExcelData(response.data, response.fileName, response.sheetNames);
           } else {
-            this.showError(response.error || 'Error uploading file', true);
+            this.showError(response.error || 'Error processing file', true);
           }
         } catch (e) {
           this.showError('Invalid response from server', true);
         }
       } else {
-        this.showError('Error uploading file: ' + xhr.statusText, true);
+        this.showError('Error processing file: ' + xhr.statusText, true);
       }
     });
 
@@ -203,7 +198,13 @@ class ExcelSilentNavigationHandler {
     });
 
     // Send request
-    xhr.open('POST', '/excel/upload', true);
+    xhr.open('POST', '/excel/process', true);
+    
+    // Add CSRF token if available
+    if (csrfTokenInput && csrfTokenInput.value) {
+      xhr.setRequestHeader('X-CSRF-Token', csrfTokenInput.value);
+    }
+    
     xhr.send(formData);
   }
 

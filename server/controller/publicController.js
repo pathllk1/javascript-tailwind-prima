@@ -31,6 +31,7 @@ exports.contact = (req, res) => {
     title: 'Contact Us', 
     user: req.user || null,
     tokenExpiration: req.tokenExpiration || null,
+    csrfToken: res.locals.csrfToken,
     success: null
   });
 };
@@ -45,6 +46,7 @@ exports.contactPost = (req, res) => {
     title: 'Contact Us',
     user: req.user || null,
     tokenExpiration: req.tokenExpiration || null,
+    csrfToken: res.locals.csrfToken,
     success: 'Thank you for your message! We will get back to you soon.',
     error: null
   });

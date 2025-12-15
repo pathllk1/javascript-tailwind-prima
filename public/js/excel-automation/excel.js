@@ -125,7 +125,7 @@ function initializeExcelHandlers() {
     // Show progress
     showProgress();
     
-    // Create FormData object
+    // Create FormData
     const formData = new FormData();
     formData.append('excelFile', file);
     
@@ -146,17 +146,17 @@ function initializeExcelHandlers() {
         try {
           const response = JSON.parse(xhr.responseText);
           if (response.success) {
-            showSuccess('File uploaded successfully!');
+            showSuccess('File processed successfully!');
             // Display the data in the table
             displayExcelData(response.data, response.fileName, response.sheetNames);
           } else {
-            showError(response.error || 'Error uploading file', true);
+            showError(response.error || 'Error processing file', true);
           }
         } catch (e) {
           showError('Invalid response from server', true);
         }
       } else {
-        showError('Error uploading file: ' + xhr.statusText, true);
+        showError('Error processing file: ' + xhr.statusText, true);
       }
     });
     
@@ -166,7 +166,7 @@ function initializeExcelHandlers() {
     });
     
     // Send request
-    xhr.open('POST', '/excel/upload');
+    xhr.open('POST', '/excel/process');
     
     // Add CSRF token if available
     if (csrfTokenInput && csrfTokenInput.value) {

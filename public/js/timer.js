@@ -3,12 +3,19 @@
 // Store timer interval globally so we can clear it on re-initialization
 let timerInterval = null;
 let timerElement = null;
+let lastUpdateTime = Date.now();
+let handleVisibilityChange = null;
 
 function initializeTimer() {
   // Clear any existing timer
   if (timerInterval) {
     clearInterval(timerInterval);
     timerInterval = null;
+  }
+  
+  // Remove any existing visibility change listener
+  if (handleVisibilityChange) {
+    document.removeEventListener('visibilitychange', handleVisibilityChange);
   }
   
   // Check if we're on a page where timer is needed
@@ -134,14 +141,57 @@ function initializeTimer() {
     // Update immediately
     updateTimerDisplay(accessTokenExpiration);
     
+    // Handle page visibility changes
+    handleVisibilityChange = function() {
+      if (document.hidden) {
+        // Page is hidden, store the time
+        lastUpdateTime = Date.now();
+      } else {
+        // Page is visible again, check if we missed any token refreshes
+        const timeSinceLastUpdate = Date.now() - lastUpdateTime;
+        
+        // If we've been away for more than 1 second, update the display
+        if (timeSinceLastUpdate > 1000) {
+          updateTimerDisplay(accessTokenExpiration);
+          
+          // Check if we need to refresh the token
+          const timeUntilExpiration = accessTokenExpiration - Date.now();
+          if (timeUntilExpiration <= 60000 && timeUntilExpiration > 0) {
+            // Only refresh if we haven't already triggered a refresh
+            if (!window.tokenRefreshTriggered) {
+              window.tokenRefreshTriggered = true;
+              refreshToken();
+            }
+          } else if (timeUntilExpiration <= 0) {
+            // Token has expired, refresh immediately
+            refreshToken();
+          }
+        }
+        
+        // Reset the last update time
+        lastUpdateTime = Date.now();
+      }
+    };
+    
+    // Add event listener for visibility changes
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    
     // Update every second
     timerInterval = setInterval(() => {
+      lastUpdateTime = Date.now();
       updateTimerDisplay(accessTokenExpiration);
       
       // Refresh token 1 minute before expiration
       const timeUntilExpiration = accessTokenExpiration - Date.now();
-      if (timeUntilExpiration <= 60000 && timeUntilExpiration > 59000) {
-        refreshToken();
+      if (timeUntilExpiration <= 60000 && timeUntilExpiration > 0) {
+        // Only refresh if we haven't already triggered a refresh
+        if (!window.tokenRefreshTriggered) {
+          window.tokenRefreshTriggered = true;
+          refreshToken();
+        }
+      } else {
+        // Reset the flag when we're more than 1 minute away from expiration
+        window.tokenRefreshTriggered = false;
       }
       
       // Emergency refresh if token has expired
