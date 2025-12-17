@@ -9,6 +9,9 @@ const { csrfTokenMiddleware } = require('./server/middleware/csrfMiddleware');
 const { optionalAuth } = require('./server/middleware/authMiddleware');
 const ajaxResponseMiddleware = require('./server/middleware/ajaxResponseMiddleware');
 
+// Import background updater for live stock data
+const { startBackgroundUpdater } = require('./server/utils/live-stock/backgroundUpdater');
+
 const app = express();
 const PORT = process.env.PORT || 3000;
 
@@ -60,6 +63,9 @@ app.use('/auth', authRoutes);
 // Protected routes (require authentication and have CSRF protection)
 const protectedRoutes = require('./server/routes/protectedRoutes');
 app.use('/', protectedRoutes);
+
+// Start the background updater for live stock data
+startBackgroundUpdater();
 
 app.listen(PORT, () => {
   console.log(`Server running on http://localhost:${PORT}`);

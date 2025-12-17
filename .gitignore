@@ -4,6 +4,7 @@ node_modules
 .env.local
 .env.*.local
 .env.example
+.db
 
 /generated/prisma
 
@@ -24,3 +25,14 @@ Thumbs.db
 .idea/
 
 .qoder/
+
+yahoo_finance_data.db
+server\database\yahoo_finance_data.db
+
+
+# Database files
+server/database/*.db
+server/database/*.db-journal
+server/database/*.sqlite
+server/database/*.sqlite3
+

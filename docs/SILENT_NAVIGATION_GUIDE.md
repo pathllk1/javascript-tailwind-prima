@@ -11,6 +11,7 @@ The Silent Navigation System enables AJAX-based page transitions without full pa
 - Updates the DOM with new content
 - Manages browser history using History API
 - Shows loading indicator during navigation
+- Implements lazy loading with hover-based prefetching
 
 ### 2. **Server-Side AJAX Support** (`ajaxResponseMiddleware.js`)
 - Detects AJAX requests via `X-Requested-With: XMLHttpRequest` header
@@ -35,6 +36,11 @@ The Silent Navigation System enables AJAX-based page transitions without full pa
 - Maintains session integrity
 - Preserves CSRF protection
 
+✅ **Performance Enhancement**
+- **Lazy Loading** - Preloads pages on hover for instant navigation
+- **Cache Management** - Stores prefetched pages for immediate display
+- **Smart Prefetching** - Automatically cancels prefetch on mouseout
+
 ✅ **Compatibility**
 - Works with all existing EJS templates
 - No template changes required
@@ -49,6 +55,12 @@ The system automatically skips navigation for:
 3. **Auth Routes** - `/auth/login`, `/auth/logout`, `/auth/signup`
 4. **Excel Route** - `/excel` (file downloads)
 5. **Manual Skip** - Links with `data-no-navigate` attribute
+
+### Lazy Loading Configuration
+The lazy loading feature has the following configurable options:
+- **Hover Delay**: 50ms (configurable in the SilentNavigator class)
+- **Cache Size**: Unlimited (managed by JavaScript Map with automatic cleanup)
+- **Cache Strategy**: Pages are removed from cache when navigated to
 
 ### Example: Skip Navigation for Specific Link
 ```html
@@ -90,6 +102,7 @@ window.addEventListener('page-changed', (e) => {
 2. **Faster Transitions** - No script re-execution, no style recalculation
 3. **Better UX** - Seamless transitions, loading indicator feedback
 4. **Preserved State** - Session, cookies, and scroll position handling
+5. **Preemptive Loading** - Pages load on hover, resulting in instant navigation
 
 ## Troubleshooting
 
@@ -125,9 +138,9 @@ main {
 
 ## Future Enhancements
 
-1. **Lazy Loading** - Load links on hover
-2. **Cache Management** - Cache frequently visited pages
-3. **Prefetch** - Pre-fetch linked pages
+1. ~~**Lazy Loading** - Load links on hover~~ (IMPLEMENTED)
+2. **Cache Management** - Advanced cache eviction policies
+3. **Prefetch** - Configurable prefetch strategies
 4. **Form Interception** - AJAX form submissions
 5. **State Management** - Better state persistence
 
@@ -186,7 +199,13 @@ const navigator = new SilentNavigator();
 - `hideLoadingState()` - Hide loading indicator
 - `initializePageScripts()` - Re-initialize all page scripts
 - `handlePopState(e)` - Handle browser back/forward
+- `prefetchPage(url)` - Preload a page for instant navigation
+- `handleLinkHover(e)` - Handle mouseover events for lazy loading
+- `handleLinkHoverEnd(e)` - Handle mouseout events for lazy loading
 
 **Properties**
 - `currentUrl` - Current page URL
 - `isNavigating` - Navigation in progress flag
+- `prefetchCache` - Map storing prefetched pages
+- `hoverTimers` - Map storing hover timeout IDs
+- `hoverDelay` - Delay in ms before prefetching (default: 50ms)

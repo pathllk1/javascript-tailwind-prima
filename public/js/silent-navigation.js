@@ -8,12 +8,20 @@ class SilentNavigator {
   constructor() {
     this.currentUrl = window.location.pathname;
     this.isNavigating = false;
+    // Lazy loading properties
+    this.prefetchCache = new Map();
+    this.hoverTimers = new Map();
+    this.hoverDelay = 50; // milliseconds
     this.init();
   }
 
   init() {
     // Intercept all navigation links (but not form submissions)
     document.addEventListener('click', (e) => this.handleLinkClick(e), true);
+    
+    // Add hover event listeners for lazy loading
+    document.addEventListener('mouseover', (e) => this.handleLinkHover(e), true);
+    document.addEventListener('mouseout', (e) => this.handleLinkHoverEnd(e), true);
     
     // Prevent form submission interception - let forms submit normally
     document.addEventListener('submit', (e) => {
@@ -26,6 +34,103 @@ class SilentNavigator {
     
     // Initialize existing scripts after page load
     this.initializePageScripts();
+  }
+
+  handleLinkHover(e) {
+    const link = e.target.closest('a');
+    
+    if (!link) return;
+    
+    // Do NOT intercept if this is inside a form
+    if (link.closest('form')) return;
+    
+    const href = link.getAttribute('href');
+    
+    // Skip if:
+    // - No href
+    // - External links
+    // - Anchor links
+    // - Links with data-no-navigate attribute
+    // - Auth routes (logout, login, signup)
+    // - Already cached
+    if (
+      !href ||
+      href.startsWith('http') ||
+      href.startsWith('//') ||
+      href.startsWith('#') ||
+      link.hasAttribute('data-no-navigate') ||
+      href.includes('/auth/') ||
+      this.prefetchCache.has(href)
+    ) {
+      return;
+    }
+
+    // Clear any existing timer for this link
+    if (this.hoverTimers.has(href)) {
+      clearTimeout(this.hoverTimers.get(href));
+    }
+
+    // Set a timer to prefetch the page
+    const timer = setTimeout(() => {
+      this.prefetchPage(href);
+    }, this.hoverDelay);
+
+    this.hoverTimers.set(href, timer);
+  }
+
+  handleLinkHoverEnd(e) {
+    const link = e.target.closest('a');
+    
+    if (!link) return;
+    
+    const href = link.getAttribute('href');
+    
+    if (!href) return;
+
+    // Clear any pending prefetch for this link
+    if (this.hoverTimers.has(href)) {
+      clearTimeout(this.hoverTimers.get(href));
+      this.hoverTimers.delete(href);
+    }
+  }
+
+  async prefetchPage(url) {
+    try {
+      // Check if already cached
+      if (this.prefetchCache.has(url)) {
+        return this.prefetchCache.get(url);
+      }
+
+      // Fetch the page content
+      const response = await fetch(url, {
+        headers: {
+          'X-Requested-With': 'XMLHttpRequest',
+          'Accept': 'text/html'
+        }
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const html = await response.text();
+      
+      // Parse the response
+      const parser = new DOMParser();
+      const doc = parser.parseFromString(html, 'text/html');
+      
+      // Store in cache
+      this.prefetchCache.set(url, {
+        doc: doc,
+        timestamp: Date.now()
+      });
+      
+      return { doc, timestamp: Date.now() };
+    } catch (error) {
+      console.error('Prefetch error:', error);
+      // Don't cache errors
+      return null;
+    }
   }
 
   handleLinkClick(e) {
@@ -60,6 +165,12 @@ class SilentNavigator {
   }
 
   async navigateTo(url) {
+    // Clear hover timers for this URL
+    if (this.hoverTimers.has(url)) {
+      clearTimeout(this.hoverTimers.get(url));
+      this.hoverTimers.delete(url);
+    }
+
     if (this.isNavigating || url === this.currentUrl) return;
 
     this.isNavigating = true;
@@ -68,23 +179,32 @@ class SilentNavigator {
       // Show loading state
       this.showLoadingState();
 
-      // Fetch the page content
-      const response = await fetch(url, {
-        headers: {
-          'X-Requested-With': 'XMLHttpRequest',
-          'Accept': 'text/html'
+      let doc;
+      
+      // Check if we have a prefetched version
+      if (this.prefetchCache.has(url)) {
+        const cached = this.prefetchCache.get(url);
+        doc = cached.doc;
+        // Remove from cache as we're using it
+        this.prefetchCache.delete(url);
+      } else {
+        // Fetch the page content
+        const response = await fetch(url, {
+          headers: {
+            'X-Requested-With': 'XMLHttpRequest',
+            'Accept': 'text/html'
+          }
+        });
+
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
         }
-      });
 
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+        const html = await response.text();
+
+        // Parse the response
+        doc = new DOMParser().parseFromString(html, 'text/html');
       }
-
-      const html = await response.text();
-
-      // Parse the response
-      const parser = new DOMParser();
-      const doc = parser.parseFromString(html, 'text/html');
 
       // Extract content from main element
       const newContent = doc.querySelector('main');
@@ -177,6 +297,7 @@ class SilentNavigator {
     // Do NOT call reinitializeDropdown() here as it would add duplicate listeners
     this.reinitializeAuth();
     this.reinitializeExcel();
+    this.reinitializeLiveStock();
   }
 
   reinitializeExcel() {
@@ -184,6 +305,15 @@ class SilentNavigator {
     if (window.location.pathname.includes('/excel')) {
       if (window.initializeExcelHandlers) {
         window.initializeExcelHandlers();
+      }
+    }
+  }
+
+  reinitializeLiveStock() {
+    // Re-initialize Live Stock handlers if on Live Stock page
+    if (window.location.pathname.includes('/live-stock')) {
+      if (window.initializeLiveStock) {
+        window.initializeLiveStock();
       }
     }
   }

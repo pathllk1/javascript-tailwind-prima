@@ -1,0 +1,97 @@
+[
+  {
+    "symbol": "21STCENMGM",
+    "yahooSymbol": "21STCENMGM.NS",
+    "error": "Database error: FOREIGN KEY constraint failed"
+  },
+  {
+    "symbol": "360ONE",
+    "yahooSymbol": "360ONE.NS",
+    "error": "Database error: FOREIGN KEY constraint failed"
+  },
+  {
+    "symbol": "3IINFOLTD",
+    "yahooSymbol": "3IINFOLTD.NS",
+    "error": "Database error: FOREIGN KEY constraint failed"
+  },
+  {
+    "symbol": "3MINDIA",
+    "yahooSymbol": "3MINDIA.NS",
+    "error": "Database error: FOREIGN KEY constraint failed"
+  },
+  {
+    "symbol": "3PLAND",
+    "yahooSymbol": "3PLAND.NS",
+    "error": "Database error: FOREIGN KEY constraint failed"
+  },
+  {
+    "symbol": "5PAISA",
+    "yahooSymbol": "5PAISA.NS",
+    "error": "Database error: FOREIGN KEY constraint failed"
+  },
+  {
+    "symbol": "63MOONS",
+    "yahooSymbol": "63MOONS.NS",
+    "error": "Database error: FOREIGN KEY constraint failed"
+  },
+  {
+    "symbol": "A2ZINFRA",
+    "yahooSymbol": "A2ZINFRA.NS",
+    "error": "Database error: FOREIGN KEY constraint failed"
+  },
+  {
+    "symbol": "AADHARHFC",
+    "yahooSymbol": "AADHARHFC.NS",
+    "error": "Database error: FOREIGN KEY constraint failed"
+  },
+  {
+    "symbol": "AAKASH",
+    "yahooSymbol": "AAKASH.NS",
+    "error": "Database error: FOREIGN KEY constraint failed"
+  },
+  {
+    "symbol": "AAREYDRUGS",
+    "yahooSymbol": "AAREYDRUGS.NS",
+    "error": "Database error: FOREIGN KEY constraint failed"
+  },
+  {
+    "symbol": "AARON",
+    "yahooSymbol": "AARON.NS",
+    "error": "Database error: FOREIGN KEY constraint failed"
+  },
+  {
+    "symbol": "AARTECH",
+    "yahooSymbol": "AARTECH.NS",
+    "error": "Database error: FOREIGN KEY constraint failed"
+  },
+  {
+    "symbol": "AARTIDRUGS",
+    "yahooSymbol": "AARTIDRUGS.NS",
+    "error": "Database error: FOREIGN KEY constraint failed"
+  },
+  {
+    "symbol": "AARTIIND",
+    "yahooSymbol": "AARTIIND.NS",
+    "error": "Database error: FOREIGN KEY constraint failed"
+  },
+  {
+    "symbol": "AARTIPHARM",
+    "yahooSymbol": "AARTIPHARM.NS",
+    "error": "Database error: FOREIGN KEY constraint failed"
+  },
+  {
+    "symbol": "AARTISURF",
+    "yahooSymbol": "AARTISURF.NS",
+    "error": "Database error: FOREIGN KEY constraint failed"
+  },
+  {
+    "symbol": "AARVI",
+    "yahooSymbol": "AARVI.NS",
+    "error": "Database error: FOREIGN KEY constraint failed"
+  },
+  {
+    "symbol": "AAVAS",
+    "yahooSymbol": "AAVAS.NS",
+    "error": "Database error: FOREIGN KEY constraint failed"
+  }
+]

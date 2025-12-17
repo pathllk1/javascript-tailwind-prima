@@ -16,6 +16,7 @@
   <script src="/js/toast.js" defer></script>
   <script src="/js/silent-navigation.js" defer></script>
   <script src="/js/interceptor.js" defer></script>
+  <script src="/js/live-stock/liveStock.js" defer></script>
   <title><%= typeof title !== 'undefined' ? title : 'MyApp' %></title>
 </head>
 <body class="bg-gray-100">
@@ -40,6 +41,7 @@
     
     <% if (typeof user !== 'undefined' && user) { %>
       <a href="/excel" class="hover:underline">Excel</a>
+      <a href="/live-stock" class="hover:underline">Live Stock</a>
       <!-- Authenticated user menu -->
       <div class="relative">
         <button id="user-menu-button" class="flex items-center space-x-1 hover:underline" aria-haspopup="true" aria-expanded="false">
