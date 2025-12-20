@@ -15,10 +15,38 @@ try {
   process.exit(1);
 }
 
-// Function to get all symbols from the database
+// Ensure schema has required columns for market data
+function ensureSchema() {
+  const info = db.prepare(`PRAGMA table_info(symbols);`).all();
+  const existing = new Set(info.map((c) => c.name));
+  const missingClauses = [];
+  if (!existing.has('previous_close')) missingClauses.push('previous_close REAL');
+  if (!existing.has('day_high')) missingClauses.push('day_high REAL');
+  if (!existing.has('day_low')) missingClauses.push('day_low REAL');
+  if (!existing.has('volume')) missingClauses.push('volume INTEGER');
+  if (!existing.has('currency')) missingClauses.push('currency TEXT');
+  if (!existing.has('last_updated')) missingClauses.push('last_updated TEXT');
+  if (missingClauses.length > 0) {
+    missingClauses.forEach((clause) => {
+      try {
+        db.exec(`ALTER TABLE symbols ADD COLUMN ${clause};`);
+        console.log(`Schema updated: ADD COLUMN ${clause}`);
+      } catch (e) {
+        // ignore "duplicate column name" to be idempotent
+        if (!/duplicate column name/i.test(e.message)) {
+          console.error('Schema alter error:', e.message);
+        }
+      }
+    });
+  }
+}
+
+ensureSchema();
+
+// Function to get all symbols from the database (including cached market fields)
 function getAllSymbols() {
   try {
-    const symbols = db.prepare('SELECT symbol, yahoo_symbol FROM symbols ORDER BY symbol').all();
+    const symbols = db.prepare('SELECT * FROM symbols ORDER BY symbol').all();
     return symbols;
   } catch (error) {
     console.error('Error fetching symbols:', error.message);
@@ -42,12 +70,24 @@ function updateSymbolData(symbolData) {
   try {
     const stmt = db.prepare(`
       UPDATE symbols 
-      SET current_price = ?, last_updated = ?
+      SET 
+        current_price = ?,
+        previous_close = COALESCE(?, previous_close),
+        day_high = COALESCE(?, day_high),
+        day_low = COALESCE(?, day_low),
+        volume = COALESCE(?, volume),
+        currency = COALESCE(?, currency),
+        last_updated = ?
       WHERE yahoo_symbol = ?
     `);
     
     return stmt.run(
       symbolData.currentPrice,
+      symbolData.previousClose ?? null,
+      symbolData.dayHigh ?? null,
+      symbolData.dayLow ?? null,
+      symbolData.volume ?? null,
+      symbolData.currency ?? null,
       new Date().toISOString(),
       symbolData.yahooSymbol
     );

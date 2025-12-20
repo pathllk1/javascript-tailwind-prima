@@ -1,5 +1,6 @@
 const express = require('express');
 const path = require('path');
+const http = require('http');
 const cookieParser = require('cookie-parser');
 const session = require('express-session');
 const securityHeaders = require('./server/middleware/securityHeaders');
@@ -8,12 +9,20 @@ const { inputSanitization } = require('./server/middleware/inputSanitization');
 const { csrfTokenMiddleware } = require('./server/middleware/csrfMiddleware');
 const { optionalAuth } = require('./server/middleware/authMiddleware');
 const ajaxResponseMiddleware = require('./server/middleware/ajaxResponseMiddleware');
+const socketService = require('./server/utils/socket');
 
 // Import background updater for live stock data
 const { startBackgroundUpdater } = require('./server/utils/live-stock/backgroundUpdater');
 
 const app = express();
+const server = http.createServer(app);
 const PORT = process.env.PORT || 3000;
+
+// Initialize Socket.IO service
+const io = socketService.initialize(server);
+
+// Make io accessible in other files
+app.set('io', io);
 
 // CSP nonce middleware (must be before securityHeaders)
 app.use(cspNonce);
@@ -41,6 +50,9 @@ app.use(ajaxResponseMiddleware);
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
 
+// Serve Chart.js locally for strict CSP (same-origin)
+app.use('/vendor/chartjs', express.static(path.join(__dirname, 'node_modules', 'chart.js', 'dist')));
+
 app.use(express.urlencoded({ extended: false }));
 app.use(express.json());
 
@@ -67,6 +79,8 @@ app.use('/', protectedRoutes);
 // Start the background updater for live stock data
 startBackgroundUpdater();
 
-app.listen(PORT, () => {
+// Start the server
+server.listen(PORT, () => {
   console.log(`Server running on http://localhost:${PORT}`);
+  console.log('WebSocket server is running');
 });

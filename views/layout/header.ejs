@@ -13,10 +13,15 @@
   <script src="/js/auth.js" defer></script>
   <script src="/js/dropdown.js" defer></script>
   <script src="/js/timer.js" defer></script>
-  <script src="/js/toast.js" defer></script>
-  <script src="/js/silent-navigation.js" defer></script>
-  <script src="/js/interceptor.js" defer></script>
-  <script src="/js/live-stock/liveStock.js" defer></script>
+  <script src="/js/toast.js" defer type="module"></script>
+  <script src="/js/silent-navigation.js" defer type="module"></script>
+  <script src="/js/interceptor.js" defer type="module"></script>
+  <script src="/js/live-stock/liveStock.js" defer type="module"></script>
+  
+  <!-- Socket.IO Client -->
+  <script src="/socket.io/socket.io.js" nonce="<%= typeof cspNonce !== 'undefined' ? cspNonce : '' %>"></script>
+  <script type="module" src="/js/socket-init.js" nonce="<%= typeof cspNonce !== 'undefined' ? cspNonce : '' %>"></script>
+  
   <title><%= typeof title !== 'undefined' ? title : 'MyApp' %></title>
 </head>
 <body class="bg-gray-100">
