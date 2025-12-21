@@ -30,6 +30,7 @@ function initializeLiveStock() {
     let socket = null;
     let socketConnected = false;
     let joinedSymbols = new Set();
+    let liveUpdatesPaused = false;
     // Data/state for search & sort
     let allStocks = [];
     let sortKey = null;
@@ -42,6 +43,10 @@ function initializeLiveStock() {
     let modalEl = null;
     let modalContentEl = null;
     let modalCloseBtn = null;
+    let modalTabMainBtn = null;
+    let modalTabDataBtn = null;
+    let modalPanelMain = null;
+    let modalPanelData = null;
     let insightsChartInstance = null;
 
     // Initialize modal hooks early
@@ -121,6 +126,21 @@ function initializeLiveStock() {
         };
         badge.className = `fixed bottom-4 right-4 px-3 py-2 text-sm rounded shadow-lg z-50 ${colors[type] || colors.info}`;
         badge.textContent = message;
+    }
+
+    function applyLiveUpdatesPauseState(state) {
+        const paused = Boolean(state && state.paused);
+        if (paused === liveUpdatesPaused) return;
+        liveUpdatesPaused = paused;
+        if (paused) {
+            const reason = state?.reason ? ` (${state.reason})` : '';
+            setConnectionStatus(`Live updates paused${reason}`, 'warn');
+        } else {
+            setConnectionStatus('Live updates resumed', 'success');
+            setTimeout(() => {
+                if (!liveUpdatesPaused) setConnectionStatus('Live updates: connected', 'success');
+            }, 2500);
+        }
     }
     
     // Function to update last updated time
@@ -278,6 +298,10 @@ function initializeLiveStock() {
         modalEl = document.getElementById('stock-modal');
         modalContentEl = document.getElementById('stock-modal-content');
         modalCloseBtn = document.getElementById('stock-modal-close');
+        modalTabMainBtn = document.getElementById('stock-modal-tab-main');
+        modalTabDataBtn = document.getElementById('stock-modal-tab-data');
+        modalPanelMain = document.getElementById('stock-modal-panel-main');
+        modalPanelData = document.getElementById('stock-modal-panel-data');
         if (modalCloseBtn) {
             modalCloseBtn.addEventListener('click', closeModal);
         }
@@ -286,6 +310,33 @@ function initializeLiveStock() {
                 if (e.target === modalEl) closeModal();
             });
         }
+        if (modalTabMainBtn) {
+            modalTabMainBtn.addEventListener('click', () => setModalTab('main'));
+        }
+        if (modalTabDataBtn) {
+            modalTabDataBtn.addEventListener('click', () => setModalTab('data'));
+        }
+    }
+
+    function setModalTab(tab) {
+        if (!modalTabMainBtn || !modalTabDataBtn || !modalPanelMain || !modalPanelData) return;
+
+        const isMain = tab === 'main';
+
+        modalPanelMain.classList.toggle('hidden', !isMain);
+        modalPanelData.classList.toggle('hidden', isMain);
+
+        modalTabMainBtn.classList.toggle('bg-gray-900', isMain);
+        modalTabMainBtn.classList.toggle('text-white', isMain);
+        modalTabMainBtn.classList.toggle('bg-gray-100', !isMain);
+        modalTabMainBtn.classList.toggle('text-gray-700', !isMain);
+        modalTabMainBtn.classList.toggle('hover:bg-gray-200', !isMain);
+
+        modalTabDataBtn.classList.toggle('bg-gray-900', !isMain);
+        modalTabDataBtn.classList.toggle('text-white', !isMain);
+        modalTabDataBtn.classList.toggle('bg-gray-100', isMain);
+        modalTabDataBtn.classList.toggle('text-gray-700', isMain);
+        modalTabDataBtn.classList.toggle('hover:bg-gray-200', isMain);
     }
 
     function closeModal() {
@@ -438,6 +489,7 @@ function initializeLiveStock() {
     function openModal(stock) {
         ensureModal();
         if (!modalEl || !modalContentEl) return;
+        setModalTab('main');
         const changePercent = computeChangePercent(stock.currentPrice, stock.previousClose);
         modalContentEl.innerHTML = `
             <h3 class="text-lg font-semibold text-gray-900">${stock.symbol || stock.yahooSymbol || 'N/A'}</h3>
@@ -866,6 +918,10 @@ function initializeLiveStock() {
             
             console.log('Top performers updated:', { gainers: topGainers.length, losers: topLosers.length });
         });
+
+        socket.on('liveUpdatesPauseChanged', (state) => {
+            applyLiveUpdatesPauseState(state);
+        });
     }
 
     function joinSocketRooms(symbols) {
@@ -936,6 +992,19 @@ function initializeLiveStock() {
     try {
         fetchInitialSnapshot();
         connectSocket();
+        window.liveStockIntervals.progressInterval = setInterval(async () => {
+            try {
+                const res = await fetch('/live-stock/update-progress');
+                const json = await res.json();
+                if (json?.success && json?.data) {
+                    applyLiveUpdatesPauseState({
+                        paused: Boolean(json.data.liveUpdatesPaused),
+                        reason: json.data.liveUpdatesPauseReason,
+                        pausedAt: json.data.liveUpdatesPausedAt
+                    });
+                }
+            } catch (_) {}
+        }, 15000);
         
         // Render initial empty cards
         setTimeout(renderTopPerformers, 100);

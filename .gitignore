@@ -35,4 +35,11 @@ server/database/*.db
 server/database/*.db-journal
 server/database/*.sqlite
 server/database/*.sqlite3
+data/
+data/*
+myrealm
+data\myrealm.management
+data\myrealm.management\*
+data\myrealm
 
+data/myrealm

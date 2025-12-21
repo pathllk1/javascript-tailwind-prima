@@ -148,10 +148,12 @@ class SocketService {
   }
 
   broadcast(event, data) {
+    if (!this.io) return;
     this.io.emit(event, data);
   }
   
   broadcastEvent(event, data) {
+    if (!this.io) return;
     this.io.emit(event, data);
   }
 }

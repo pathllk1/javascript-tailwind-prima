@@ -156,12 +156,16 @@ function notifyDataUpdates(data) {
 
 // Function to get update progress
 function getUpdateProgress() {
+  const pauseState = liveStockEvents?.getLiveUpdatesPauseState?.() || { paused: false, reason: null, pausedAt: null };
   return {
     isUpdating,
     totalSymbols,
     processedSymbols,
     progressPercent: totalSymbols > 0 ? Math.round((processedSymbols / totalSymbols) * 100) : 0,
-    lastUpdate: lastUpdateTimestamp
+    lastUpdate: lastUpdateTimestamp,
+    liveUpdatesPaused: pauseState.paused === true,
+    liveUpdatesPauseReason: pauseState.reason,
+    liveUpdatesPausedAt: pauseState.pausedAt
   };
 }
 
@@ -171,6 +175,13 @@ async function performBackgroundUpdate() {
   if (currentUpdate) {
     console.log('Background update already in progress, returning existing promise');
     return currentUpdate;
+  }
+
+  if (liveStockEvents?.isLiveUpdatesPaused?.()) {
+    console.log('Live updates are paused, skipping background update');
+    lastUpdateTimestamp = new Date().toISOString();
+    notifyProgress();
+    return null;
   }
 
   // Create a new update promise
@@ -325,6 +336,12 @@ function startBackgroundUpdater() {
       console.log('Update already in progress, skipping...');
       return;
     }
+
+    if (liveStockEvents?.isLiveUpdatesPaused?.()) {
+      console.log('Live updates are paused, skipping scheduled update');
+      notifyProgress();
+      return;
+    }
     
     try {
       isUpdating = true;
@@ -338,7 +355,13 @@ function startBackgroundUpdater() {
   
   // Perform initial update
   safeUpdate();
-  
+
+  liveStockEvents.on('liveUpdatesPauseChanged', (state) => {
+    if (state?.paused === false) {
+      safeUpdate();
+    }
+  });
+
   // Schedule periodic updates
   setInterval(safeUpdate, UPDATE_INTERVAL);
 }

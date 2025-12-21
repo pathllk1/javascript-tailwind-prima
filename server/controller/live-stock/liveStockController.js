@@ -1,4 +1,3 @@
-const { getAllSymbols, getSymbolByYahooSymbol, updateSymbolData, db } = require('../../utils/live-stock/dbUtils');
 const { fetchLiveDataBatch, fetchChart, fetchFundamentals, fetchOptionsChain, fetchInsider, fetchRecommendations } = require('../../utils/live-stock/yahooFinanceFetcher');
 const { getLiveSnapshot, getUpdateProgress, subscribeToDataUpdates } = require('../../utils/live-stock/backgroundUpdater');
 

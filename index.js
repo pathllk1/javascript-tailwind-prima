@@ -3,6 +3,7 @@ const path = require('path');
 const http = require('http');
 const cookieParser = require('cookie-parser');
 const session = require('express-session');
+const bodyParser = require('body-parser');
 const securityHeaders = require('./server/middleware/securityHeaders');
 const cspNonce = require('./server/middleware/cspNonce');
 const { inputSanitization } = require('./server/middleware/inputSanitization');
@@ -13,6 +14,12 @@ const socketService = require('./server/utils/socket');
 
 // Import background updater for live stock data
 const { startBackgroundUpdater } = require('./server/utils/live-stock/backgroundUpdater');
+
+// Import daily OHLCV recorder (Realm storage only)
+const { startOhlcvDailyRecorder } = require('./server/utils/live-stock/ohlcvRecorder');
+
+// Import Realm database configuration and models
+const { getRealm } = require('./server/database/realm');
 
 const app = express();
 const server = http.createServer(app);
@@ -40,6 +47,10 @@ app.use(session({
     maxAge: 1000 * 60 * 60 * 24 // 24 hours
   }
 }));
+
+// Body parser middleware
+app.use(bodyParser.json());
+app.use(bodyParser.urlencoded({ extended: true }));
 
 // Input sanitization middleware
 app.use(inputSanitization);
@@ -72,12 +83,34 @@ app.use('/', publicRoutes);
 const authRoutes = require('./server/routes/authRoutes');
 app.use('/auth', authRoutes);
 
+// Initialize Realm database connection
+(async () => {
+  try {
+    const realm = await getRealm();
+    console.log('Realm database initialized successfully');
+    app.set('realm', realm); // Make realm instance available in routes
+    
+    // Import and use Realm routes
+    const realmRoutes = require('./server/routes/realmRoutes');
+    app.use('/api', realmRoutes);
+    
+  } catch (error) {
+    console.error('Failed to initialize Realm:', error);
+    process.exit(1);
+  }
+})();
+
 // Protected routes (require authentication and have CSRF protection)
 const protectedRoutes = require('./server/routes/protectedRoutes');
 app.use('/', protectedRoutes);
 
 // Start the background updater for live stock data
 startBackgroundUpdater();
+
+// Start the daily OHLCV recorder (runs immediately if missed)
+startOhlcvDailyRecorder().catch((error) => {
+  console.error('Failed to start OHLCV daily recorder:', error?.message || error);
+});
 
 // Start the server
 server.listen(PORT, () => {
