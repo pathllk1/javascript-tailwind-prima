@@ -6,11 +6,15 @@ This document provides a comprehensive overview of the application architecture,
 ## Technology Stack
 - **Backend Framework**: Express.js v5.2.1
 - **Frontend Templating**: EJS (Embedded JavaScript)
-- **Database**: PostgreSQL with Prisma ORM
+- **Database**: PostgreSQL with Prisma ORM for user authentication, SQLite for stock data
 - **Authentication**: JWT (JSON Web Tokens) with bcrypt.js for password hashing
 - **Security**: Helmet.js, csurf, DOMPurify
 - **Styling**: Tailwind CSS
 - **Build Tools**: Concurrently, Nodemon
+- **Excel Processing**: ExcelJS for reading and writing Excel files
+- **Real-time Communication**: Socket.IO for WebSocket connections
+- **Financial Data**: yahoo-finance2 for fetching stock market data
+- **Data Visualization**: Chart.js for displaying stock charts
 
 ## Directory Structure
 ```
@@ -23,17 +27,31 @@ This document provides a comprehensive overview of the application architecture,
 │   └── schema.prisma       # Prisma schema definition
 ├── public/                 # Static assets
 │   ├── css/                # Compiled CSS files
+│   │   └── excel-automation/ # Excel automation specific styles
 │   └── js/                 # Client-side JavaScript
+│       ├── excel-automation/ # Excel automation scripts
+│       ├── live-stock/      # Live stock data scripts
+│       └── services/        # Shared services (e.g., socketService.js)
 ├── server/                 # Server-side application code
 │   ├── config/             # Configuration files
 │   ├── controller/         # Route controllers
+│   │   ├── excel-automation/ # Excel automation controllers
+│   │   └── live-stock/      # Live stock data controllers
 │   ├── middleware/         # Express middleware
 │   ├── routes/             # Route definitions
+│   │   ├── excel-automation/ # Excel automation routes
+│   │   └── live-stock/      # Live stock data routes
 │   └── utils/              # Utility functions
+│       ├── excel-automation/ # Excel processing utilities
+│       └── live-stock/      # Live stock data utilities
 ├── views/                  # EJS templates
+│   ├── components/         # Reusable UI components
+│   │   └── excel-automation/ # Excel automation components
 │   ├── css/                # Source CSS files
 │   ├── layout/             # Layout templates
 │   └── pages/              # Page templates
+│       ├── excel-automation/ # Excel automation pages
+│       └── live-stock/      # Live stock data pages
 ├── tests/                  # Test files (currently empty)
 ├── .env.example            # Environment variable template
 ├── index.js                # Main application entry point
@@ -105,6 +123,69 @@ The frontend uses EJS templates with Tailwind CSS for styling:
 - Real-time token expiration monitoring
 - Accessible dropdown menus
 
+### 5. Excel Automation System
+The Excel Automation System provides comprehensive functionality for uploading, processing, editing, and exporting Excel files directly in the browser.
+
+#### Key Features:
+- File upload with drag-and-drop support
+- Multi-sheet Excel file processing
+- Interactive table editor with cell-level editing
+- Automatic data type detection for columns
+- Advanced filtering capabilities with type-specific filter interfaces
+- Global search across all columns
+- Column sorting (ascending/descending)
+- Data persistence and export functionality
+
+#### Key Files:
+- `server/controller/excel-automation/excelController.js`: Handles Excel file upload, processing, and export
+- `server/utils/excel-automation/excelProcessor.js`: Processes Excel files using ExcelJS library
+- `server/routes/excel-automation/excelRoutes.js`: Defines Excel automation API endpoints
+- `public/js/excel-automation/excel.js`: Client-side file upload and UI management
+- `public/js/excel-automation/tableEditor.js`: Interactive table editing functionality
+- `public/js/excel-automation/dataTypeDetector.js`: Automatic detection of column data types
+- `public/js/excel-automation/filterEngine.js`: Core filtering logic and evaluation
+- `public/js/excel-automation/filterUI.js`: UI components for filtering interface
+- `views/pages/excel-automation/index.ejs`: Main Excel automation page template
+
+#### Data Flow:
+1. User uploads Excel file via drag-and-drop or file selection
+2. File is sent to server for processing in memory (not saved to disk)
+3. Server processes file using ExcelJS and extracts data
+4. Data is sent back to client and displayed in interactive table
+5. User can edit data directly in the browser
+6. Edited data can be saved to the server session
+7. User can export edited data as Excel file
+
+### 6. Live Stock Data System
+The Live Stock Data System provides real-time stock market information with automatic updates and comprehensive data display.
+
+#### Key Features:
+- Real-time stock data fetching from Yahoo Finance API
+- Automatic background updates every 5 minutes
+- Batch processing of stock symbols to respect API rate limits
+- WebSocket-based real-time updates to connected clients
+- Comprehensive stock data display (current price, previous close, day range, volume)
+- Detailed stock insights with charts, fundamentals, options, insider transactions, and recommendations
+- Search and sort functionality for stock data
+- Responsive design for all device sizes
+
+#### Key Files:
+- `server/controller/live-stock/liveStockController.js`: Handles stock data requests and coordination
+- `server/utils/live-stock/yahooFinanceFetcher.js`: Fetches live data from Yahoo Finance API
+- `server/utils/live-stock/dbUtils.js`: Manages SQLite database operations for stock data
+- `server/utils/live-stock/backgroundUpdater.js`: Automatic background stock data updates
+- `server/routes/live-stock/liveStockRoutes.js`: Defines live stock data API endpoints
+- `public/js/live-stock/liveStock.js`: Client-side stock data display and WebSocket integration
+- `views/pages/live-stock/index.ejs`: Main live stock data page template
+
+#### Data Flow:
+1. Background service runs every 5 minutes to fetch updated stock data
+2. Yahoo Finance API is queried for current stock prices
+3. Data is stored in SQLite database for persistence
+4. Connected clients receive real-time updates via WebSocket
+5. Users can manually refresh data or view detailed stock information
+6. Detailed stock insights are fetched on demand from Yahoo Finance API
+
 ## API Endpoints
 
 ### Public Routes
@@ -124,6 +205,16 @@ The frontend uses EJS templates with Tailwind CSS for styling:
 ### Protected Routes
 - `GET /profile` - User profile page (requires authentication)
 - `GET /settings` - Account settings page (requires authentication)
+- `GET /excel` - Excel automation page (requires authentication)
+- `POST /excel/upload` - Upload Excel file (requires authentication and CSRF protection)
+- `POST /excel/process` - Process Excel file in memory (requires authentication and CSRF protection)
+- `POST /excel/select-sheet` - Select worksheet from multi-sheet file (requires authentication and CSRF protection)
+- `POST /excel/save` - Save edited data (requires authentication and CSRF protection)
+- `GET /excel/export/:id` - Export data to Excel file (requires authentication)
+- `GET /live-stock` - Live stock data page (requires authentication)
+- `GET /live-stock/symbols` - Get all stock symbols (requires authentication)
+- `GET /live-stock/live-data` - Get live data for all symbols (requires authentication)
+- `GET /live-stock/live-data/:symbol` - Get live data for a specific symbol (requires authentication)
 
 ## Middleware Chain
 The application uses a layered middleware approach:
@@ -135,13 +226,19 @@ The application uses a layered middleware approach:
 5. **Body Parser**: Parses request bodies
 6. **View Engine**: Sets EJS as templating engine
 7. **Optional Authentication**: Makes user info available to views
-8. **Route Handlers**: Specific middleware for different route groups
+8. **Session Management**: Express-session for session handling
+9. **Route Handlers**: Specific middleware for different route groups
+
+The Excel Automation and Live Stock Data routes use the same middleware chain as other protected routes, with additional CSRF protection for state-changing operations.
 
 ## Design Patterns
 - **MVC Pattern**: Model-View-Controller separation
 - **Middleware Pattern**: Express middleware for cross-cutting concerns
 - **Factory Pattern**: Utility functions for creating and verifying tokens
 - **Singleton Pattern**: Prisma client instance
+- **Observer Pattern**: Event-driven updates for real-time stock data via WebSocket
+- **Strategy Pattern**: Different filter types and operators in the Excel filtering system
+- **Module Pattern**: Encapsulation of functionality in client-side JavaScript modules
 
 ## Environment Configuration
 The application uses environment variables for configuration:
@@ -150,6 +247,8 @@ The application uses environment variables for configuration:
 - `JWT_REFRESH_SECRET`: Secret for signing refresh tokens
 - `PORT`: Server port
 - `NODE_ENV`: Environment (development/production)
+- `SESSION_SECRET`: Secret for session management
+- `YAHOO_FINANCE_API_KEY`: API key for Yahoo Finance (if required)
 
 ## Build Process
 - **Development**: Uses nodemon for auto-restart and concurrently for parallel processes

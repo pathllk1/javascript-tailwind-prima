@@ -62,18 +62,32 @@ This will start the server with auto-reload and compile Tailwind CSS in watch mo
 ### Server Directory (`server/`)
 - `config/`: Configuration files
 - `controller/`: Route controllers
+  - `excel-automation/`: Excel automation controllers
+  - `live-stock/`: Live stock data controllers
 - `middleware/`: Express middleware
 - `routes/`: Route definitions
+  - `excel-automation/`: Excel automation routes
+  - `live-stock/`: Live stock data routes
 - `utils/`: Utility functions
+  - `excel-automation/`: Excel processing utilities
+  - `live-stock/`: Live stock data utilities
 
 ### Views Directory (`views/`)
 - `layout/`: Layout templates
 - `pages/`: Page templates
+  - `excel-automation/`: Excel automation pages
+  - `live-stock/`: Live stock data pages
+- `components/`: Reusable UI components
+  - `excel-automation/`: Excel automation components
 - `css/`: Source CSS files
 
 ### Public Directory (`public/`)
 - `css/`: Compiled CSS files
+  - `excel-automation/`: Excel automation specific styles
 - `js/`: Client-side JavaScript
+  - `excel-automation/`: Excel automation scripts
+  - `live-stock/`: Live stock data scripts
+  - `services/`: Shared services (e.g., socketService.js)
 
 ### Database (`prisma/`)
 - `schema.prisma`: Prisma schema definition
@@ -95,12 +109,34 @@ This will start the server with auto-reload and compile Tailwind CSS in watch mo
 4. Update documentation as needed
 5. Submit a pull request
 
+### Adding Excel Automation Features
+1. Create controllers in `server/controller/excel-automation/`
+2. Define routes in `server/routes/excel-automation/`
+3. Implement utilities in `server/utils/excel-automation/`
+4. Create pages in `views/pages/excel-automation/`
+5. Add client-side scripts in `public/js/excel-automation/`
+6. Update styles in `public/css/excel-automation/` if needed
+7. Add components in `views/components/excel-automation/` if needed
+
+### Adding Live Stock Data Features
+1. Create controllers in `server/controller/live-stock/`
+2. Define routes in `server/routes/live-stock/`
+3. Implement utilities in `server/utils/live-stock/`
+4. Create pages in `views/pages/live-stock/`
+5. Add client-side scripts in `public/js/live-stock/`
+6. Update the SQLite database schema if needed
+
 ### Code Organization
 - Follow the existing MVC pattern
 - Place new routes in appropriate files in `server/routes/`
+  - Use feature-specific subdirectories (`excel-automation/`, `live-stock/`)
 - Implement route handlers in `server/controller/`
+  - Use feature-specific subdirectories (`excel-automation/`, `live-stock/`)
 - Add new middleware to `server/middleware/` if needed
 - Utility functions go in `server/utils/`
+  - Use feature-specific subdirectories (`excel-automation/`, `live-stock/`)
+- Create feature-specific pages in `views/pages/`
+- Add reusable components to `views/components/`
 
 ### Database Changes
 1. Modify `prisma/schema.prisma` as needed
@@ -117,7 +153,10 @@ This will start the server with auto-reload and compile Tailwind CSS in watch mo
 - Use EJS templates in `views/`
 - Add new styles to `views/css/main.css`
 - Client-side JavaScript goes in `public/js/`
+  - Feature-specific scripts in subdirectories (`excel-automation/`, `live-stock/`)
 - Tailwind CSS classes can be used directly in templates
+- Create reusable components in `views/components/`
+- Use feature-specific page templates in `views/pages/` subdirectories
 
 ### Testing
 Run the authentication test script:
@@ -162,6 +201,8 @@ npm run setup-db
 - Follow the existing authentication patterns
 - Protect routes with appropriate middleware
 - Use CSRF protection for forms that modify data
+- Ensure all new endpoints implement proper authentication checks
+- Validate and sanitize all user inputs, especially for file uploads
 
 ### Error Handling
 - Never expose sensitive information in error messages
@@ -228,10 +269,19 @@ The application logs information to the console:
 - `npm run setup-db`: Set up sample users
 - `npm run test-auth`: Test authentication utilities
 
+### Excel Automation
+- `node generate-test-excel.js`: Generate test Excel files
+- `node test-endpoints.js`: Test Excel automation endpoints
+
 ### Database
 - `npx prisma studio`: Open Prisma Studio for database browsing
 - `npx prisma migrate dev --name migration_name`: Create new migration
 - `npx prisma migrate reset`: Reset database (development only)
+
+### Live Stock Data
+- `node fetch-yahoo-prices.js`: Fetch stock prices from Yahoo Finance
+- `node fetch-all-ohlcv-to-sqlite.js`: Fetch OHLCV data to SQLite database
+- `node query-ohlcv-data.js`: Query OHLCV data from SQLite database
 
 ### Testing
 - `npm test`: Run test suite (if implemented)

@@ -48,6 +48,14 @@ exports.login = async (req, res) => {
       maxAge: 15 * 60 * 1000 // 15 minutes
     });
     
+    // Also set a non-httpOnly socket token for WebSocket auth (same token, just readable by JS)
+    res.cookie('socketToken', accessToken, {
+      httpOnly: false,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'strict',
+      maxAge: 15 * 60 * 1000 // 15 minutes
+    });
+    
     res.cookie('refreshToken', refreshToken, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
@@ -124,6 +132,14 @@ exports.signup = async (req, res) => {
       maxAge: 15 * 60 * 1000 // 15 minutes
     });
     
+    // Also set a non-httpOnly socket token for WebSocket auth (same token, just readable by JS)
+    res.cookie('socketToken', accessToken, {
+      httpOnly: false,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'strict',
+      maxAge: 15 * 60 * 1000 // 15 minutes
+    });
+    
     res.cookie('refreshToken', refreshToken, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
@@ -151,6 +167,7 @@ exports.logout = async (req, res) => {
     
     // Clear cookies
     res.clearCookie('accessToken');
+    res.clearCookie('socketToken');
     res.clearCookie('refreshToken');
     
     // Redirect to home page with success message
@@ -188,6 +205,14 @@ exports.refreshToken = async (req, res) => {
     // Set new access token cookie
     res.cookie('accessToken', newAccessToken, {
       httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'strict',
+      maxAge: 15 * 60 * 1000 // 15 minutes
+    });
+    
+    // Also set a non-httpOnly socket token for WebSocket auth (same token, just readable by JS)
+    res.cookie('socketToken', newAccessToken, {
+      httpOnly: false,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'strict',
       maxAge: 15 * 60 * 1000 // 15 minutes

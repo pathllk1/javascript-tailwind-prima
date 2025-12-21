@@ -35,6 +35,9 @@ function initializeLiveStock() {
     let sortKey = null;
     let sortDir = 'asc'; // 'asc' | 'desc'
     let searchTerm = '';
+    // Top performers data
+    let topGainers = [];
+    let topLosers = [];
     // Modal refs
     let modalEl = null;
     let modalContentEl = null;
@@ -150,6 +153,18 @@ function initializeLiveStock() {
         return `<span class="${className}">${sign}${formatted}%</span>`;
     }
     
+    // Function to format percentage for top performers (with arrow)
+    function formatTopPerformerPercentage(value) {
+        if (value === undefined || value === null) return 'N/A';
+        
+        const formatted = value.toFixed(2);
+        const className = value >= 0 ? 'text-green-600' : 'text-red-600';
+        const sign = value >= 0 ? '+' : '';
+        const arrow = value >= 0 ? '▲' : '▼';
+        
+        return `<span class="${className}">${arrow} ${sign}${formatted}%</span>`;
+    }
+    
     // Function to format volume
     function formatVolume(value) {
         if (value === undefined || value === null) return 'N/A';
@@ -170,11 +185,92 @@ function initializeLiveStock() {
         return `${formatCurrency(low)} - ${formatCurrency(high)}`;
     }
     
+    // Function to compute change percentage
     function computeChangePercent(currentPrice, previousClose) {
         if (currentPrice !== undefined && previousClose !== undefined && previousClose !== 0) {
             return ((currentPrice - previousClose) / previousClose) * 100;
         }
         return null;
+    }
+    
+    // Function to render top gainers and losers cards
+    function renderTopPerformers() {
+        const gainersContainer = document.getElementById('top-gainers');
+        const losersContainer = document.getElementById('top-losers');
+        
+        if (!gainersContainer || !losersContainer) return;
+        
+        // Render top gainers
+        if (topGainers.length > 0) {
+            gainersContainer.innerHTML = `
+                <div class="flex items-center justify-between mb-2">
+                    <h3 class="text-sm font-bold text-gray-800">Top Gainers</h3>
+                    <span class="text-xs text-gray-500">▲</span>
+                </div>
+                <div class="grid grid-cols-2 gap-1">
+                    ${topGainers.slice(0, 10).map((stock, index) => `
+                        <div class="flex items-center justify-between p-1 hover:bg-green-50 rounded text-xs">
+                            <div class="flex items-center">
+                                <span class="w-4 h-4 flex items-center justify-center text-[9px] font-bold text-white bg-green-500 rounded mr-1">${index + 1}</span>
+                                <div class="truncate max-w-[70px]">
+                                    <div class="font-medium">${stock.symbol}</div>
+                                </div>
+                            </div>
+                            <div class="text-right">
+                                <div class="font-medium">${formatCurrency(stock.currentPrice)}</div>
+                                <div class="text-[9px]">${formatTopPerformerPercentage(stock.changePercent)}</div>
+                            </div>
+                        </div>
+                    `).join('')}
+                </div>
+            `;
+        } else {
+            gainersContainer.innerHTML = `
+                <div class="flex items-center justify-between mb-2">
+                    <h3 class="text-sm font-bold text-gray-800">Top Gainers</h3>
+                    <span class="text-xs text-gray-500">▲</span>
+                </div>
+                <div class="text-center py-2 text-gray-500 text-xs">
+                    No data
+                </div>
+            `;
+        }
+        
+        // Render top losers
+        if (topLosers.length > 0) {
+            losersContainer.innerHTML = `
+                <div class="flex items-center justify-between mb-2">
+                    <h3 class="text-sm font-bold text-gray-800">Top Losers</h3>
+                    <span class="text-xs text-gray-500">▼</span>
+                </div>
+                <div class="grid grid-cols-2 gap-1">
+                    ${topLosers.slice(0, 10).map((stock, index) => `
+                        <div class="flex items-center justify-between p-1 hover:bg-red-50 rounded text-xs">
+                            <div class="flex items-center">
+                                <span class="w-4 h-4 flex items-center justify-center text-[9px] font-bold text-white bg-red-500 rounded mr-1">${index + 1}</span>
+                                <div class="truncate max-w-[70px]">
+                                    <div class="font-medium">${stock.symbol}</div>
+                                </div>
+                            </div>
+                            <div class="text-right">
+                                <div class="font-medium">${formatCurrency(stock.currentPrice)}</div>
+                                <div class="text-[9px]">${formatTopPerformerPercentage(stock.changePercent)}</div>
+                            </div>
+                        </div>
+                    `).join('')}
+                </div>
+            `;
+        } else {
+            losersContainer.innerHTML = `
+                <div class="flex items-center justify-between mb-2">
+                    <h3 class="text-sm font-bold text-gray-800">Top Losers</h3>
+                    <span class="text-xs text-gray-500">▼</span>
+                </div>
+                <div class="text-center py-2 text-gray-500 text-xs">
+                    No data
+                </div>
+            `;
+        }
     }
 
     function ensureModal() {
@@ -217,9 +313,15 @@ function initializeLiveStock() {
 
         const labels = (points || []).map((p) => {
             const d = p?.date ? new Date(p.date) : null;
-            return d && !Number.isNaN(d.getTime())
-                ? d.toLocaleDateString(undefined, { month: 'short', day: '2-digit' })
-                : '';
+            if (!d || Number.isNaN(d.getTime())) return '';
+            
+            // For longer time ranges, include the year in the label
+            const rangeInMonths = calculateRangeInMonths(points);
+            if (rangeInMonths > 3) {
+                return d.toLocaleDateString(undefined, { year: '2-digit', month: 'short', day: '2-digit' });
+            } else {
+                return d.toLocaleDateString(undefined, { month: 'short', day: '2-digit' });
+            }
         });
         const closes = (points || []).map((p) => (p?.close ?? null));
 
@@ -253,14 +355,65 @@ function initializeLiveStock() {
                 interaction: { mode: 'index', intersect: false },
                 plugins: {
                     legend: { display: true },
-                    tooltip: { enabled: true }
+                    tooltip: { 
+                        enabled: true,
+                        callbacks: {
+                            title: function(tooltipItems) {
+                                // Get the actual date from the data point, not from the label
+                                const dataIndex = tooltipItems[0].dataIndex;
+                                const point = points[dataIndex];
+                                if (point && point.date) {
+                                    const date = new Date(point.date);
+                                    if (date && !isNaN(date.getTime())) {
+                                        return date.toLocaleDateString(undefined, { 
+                                            year: 'numeric', 
+                                            month: 'long', 
+                                            day: 'numeric' 
+                                        });
+                                    }
+                                }
+                                return '';
+                            },
+                            label: function(context) {
+                                return `${context.dataset.label}: ${context.parsed.y.toFixed(2)}`;
+                            }
+                        }
+                    }
                 },
                 scales: {
-                    x: { ticks: { maxTicksLimit: 8 } },
+                    x: { 
+                        ticks: { 
+                            maxTicksLimit: 8,
+                            callback: function(value, index, values) {
+                                // Improve x-axis label formatting
+                                const label = this.getLabelForValue(value);
+                                // If label contains year info (2-digit year), we can show more ticks
+                                if (label && (label.includes("'") || label.includes("20") || label.includes("19"))) { // Year format detection
+                                    return label;
+                                }
+                                return label;
+                            }
+                        } 
+                    },
                     y: { ticks: { precision: 2 } }
                 }
             }
         });
+    }
+
+    // Helper function to calculate the range in months between first and last data points
+    function calculateRangeInMonths(points) {
+        if (!points || points.length < 2) return 0;
+        
+        const firstDate = new Date(points[0].date);
+        const lastDate = new Date(points[points.length - 1].date);
+        
+        if (isNaN(firstDate.getTime()) || isNaN(lastDate.getTime())) return 0;
+        
+        const yearsDiff = lastDate.getFullYear() - firstDate.getFullYear();
+        const monthsDiff = lastDate.getMonth() - firstDate.getMonth();
+        
+        return yearsDiff * 12 + monthsDiff;
     }
 
     async function fetchInsights(symbol) {
@@ -640,8 +793,8 @@ function initializeLiveStock() {
     }
 
     function getAuthToken() {
-        // Prefer httpOnly cookie (sent automatically) but also check readable cookies/local storage
-        return getCookie('accessToken') || localStorage.getItem('accessToken') || sessionStorage.getItem('accessToken') || null;
+        // Prefer socketToken (readable non-httpOnly), fallback to others
+        return getCookie('socketToken') || getCookie('accessToken') || localStorage.getItem('accessToken') || sessionStorage.getItem('accessToken') || null;
     }
 
     function connectSocket() {
@@ -670,6 +823,9 @@ function initializeLiveStock() {
             setConnectionStatus('Live updates: connected', 'success');
             // Re-join rooms after reconnect
             joinedSymbols.forEach(sym => socket.emit('joinStockRoom', sym));
+            
+            // Request initial top performers data
+            socket.emit('requestTopPerformers');
         });
 
         socket.on('disconnect', (reason) => {
@@ -694,6 +850,21 @@ function initializeLiveStock() {
                 volume: data.volume,
                 currency: data.currency
             });
+        });
+        
+        // Listen for top performers updates
+        socket.on('topPerformers', (data) => {
+            console.log('Received top performers data:', data);
+            if (!data) return;
+            
+            // Update local data
+            topGainers = data.gainers || [];
+            topLosers = data.losers || [];
+            
+            // Render the cards
+            renderTopPerformers();
+            
+            console.log('Top performers updated:', { gainers: topGainers.length, losers: topLosers.length });
         });
     }
 
@@ -765,6 +936,9 @@ function initializeLiveStock() {
     try {
         fetchInitialSnapshot();
         connectSocket();
+        
+        // Render initial empty cards
+        setTimeout(renderTopPerformers, 100);
     } catch (error) {
         console.error('Error during initial data load:', error);
     }

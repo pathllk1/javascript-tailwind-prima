@@ -22,13 +22,15 @@ Ensure all required environment variables are configured:
 - `DATABASE_URL`: Production database connection string
 - `JWT_SECRET`: Strong secret for access tokens
 - `JWT_REFRESH_SECRET`: Strong secret for refresh tokens
+- `SESSION_SECRET`: Strong secret for session management
 - `NODE_ENV`: Set to "production"
 - `PORT`: Server port (typically 3000)
 
 ### 2. Database Setup
-- Create production database
+- Create production PostgreSQL database
 - Configure database user with appropriate permissions
 - Run migrations to set up schema
+- Ensure SQLite database file is writable by application user
 
 ### 3. SSL Certificate
 - Obtain SSL certificate for your domain
@@ -64,6 +66,7 @@ Ensure all required environment variables are configured:
    DATABASE_URL="postgresql://username:password@localhost:5432/production_db?schema=public"
    JWT_SECRET="your_strong_jwt_secret_here"
    JWT_REFRESH_SECRET="your_strong_refresh_secret_here"
+   SESSION_SECRET="your_strong_session_secret_here"
    NODE_ENV="production"
    PORT=3000
    ```
@@ -191,6 +194,8 @@ sudo ufw enable
 - Use strong database passwords
 - Restrict database access to localhost only
 - Regular backups
+- Ensure SQLite database file permissions are restricted
+- Monitor database access logs
 
 ### Performance Optimization
 
@@ -215,6 +220,12 @@ gzip_types text/plain text/css text/xml text/javascript application/javascript a
 #### 3. Database Connection Pooling
 Configure connection pooling in database settings.
 
+#### 4. File Upload Limits
+Configure web server to limit file upload sizes for Excel automation:
+```nginx
+client_max_body_size 5M;
+```
+
 ## Monitoring and Maintenance
 
 ### Application Monitoring
@@ -229,16 +240,25 @@ Configure connection pooling in database settings.
   ```
 
 ### Database Monitoring
-- Monitor database performance
+- Monitor PostgreSQL database performance
 - Set up alerts for slow queries
 - Regular maintenance tasks
+- Monitor SQLite database size and performance
+- Set up alerts for stock data update failures
 
 ### Backup Strategy
 
 #### 1. Database Backups
 Regular automated database backups:
+
+PostgreSQL database backup:
 ```bash
 pg_dump production_db > backup_$(date +%F).sql
+```
+
+SQLite database backup:
+```bash
+cp yahoo_finance_data.db yahoo_finance_data_backup_$(date +%F).db
 ```
 
 #### 2. Application Backups
@@ -276,6 +296,11 @@ pg_dump production_db > backup_$(date +%F).sql
 9. Verify application is working
 10. Disable maintenance mode
 
+### Special Considerations for New Features
+- Verify SQLite database permissions after updates
+- Test Excel file upload functionality
+- Verify stock data updates are working correctly
+
 ## Troubleshooting
 
 ### Common Deployment Issues
@@ -300,11 +325,23 @@ pg_dump production_db > backup_$(date +%F).sql
 - Check database query performance
 - Optimize slow endpoints
 
+#### 5. Excel Automation Issues
+- Check file upload size limits
+- Verify ExcelJS library installation
+- Check temporary file permissions
+
+#### 6. Live Stock Data Issues
+- Verify Yahoo Finance API connectivity
+- Check SQLite database permissions
+- Monitor background update processes
+
 ### Health Checks
 Implement health check endpoints:
 - Database connectivity check
 - Application responsiveness check
 - External service availability
+- Excel file processing functionality
+- Stock data update status
 
 ## Scaling Considerations
 
@@ -312,6 +349,7 @@ Implement health check endpoints:
 - Use load balancer for multiple instances
 - Shared session storage (Redis)
 - Database connection pooling
+- Shared SQLite database for stock data (or replication strategy)
 
 ### Vertical Scaling
 - Increase server resources
@@ -322,6 +360,8 @@ Implement health check endpoints:
 - Read replicas for heavy read loads
 - Connection pooling
 - Query optimization
+- SQLite database optimization for stock data
+- Partitioning strategies for large datasets
 
 ## Disaster Recovery
 

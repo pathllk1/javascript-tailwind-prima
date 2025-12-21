@@ -34,15 +34,39 @@ The application is a secure web platform that provides user authentication and p
 - **Dynamic Content**: User-specific information display
 - **Form Handling**: Contact form with validation and submission
 
+### Excel Automation System
+- **File Upload**: Drag-and-drop or traditional file selection for Excel files (.xlsx, .xls)
+- **Multi-sheet Support**: Ability to work with multiple worksheets in a single file
+- **Interactive Table Editor**: In-browser editing of Excel data with double-click or Enter key activation
+- **Data Type Detection**: Automatic detection of column data types (text, number, date, boolean)
+- **Advanced Filtering**: Column-specific filtering with type-appropriate filter interfaces
+- **Global Search**: Search across all columns simultaneously
+- **Sorting**: Click column headers to sort data ascending or descending
+- **Data Persistence**: Save edited data back to the server
+- **Export Functionality**: Download edited data as Excel files
+
+### Live Stock Data System
+- **Real-time Data**: Fetches live stock market data from Yahoo Finance API
+- **Automatic Updates**: Background service updates stock data every 5 minutes
+- **Batch Processing**: Efficient processing of stock symbols in batches to respect API rate limits
+- **WebSockets**: Real-time updates to connected clients without page refresh
+- **Comprehensive Data Display**: Shows current price, previous close, day range, volume, and more
+- **Detailed Insights**: Charts, fundamentals, options, insider transactions, and recommendations
+- **Search and Sort**: Find and organize stocks by various criteria
+- **Responsive Design**: Works on all device sizes
+
 ## Technical Architecture
 
 ### Backend Technology Stack
 - **Framework**: Express.js v5.2.1
 - **Language**: JavaScript (Node.js)
-- **Database**: PostgreSQL with Prisma ORM
+- **Database**: PostgreSQL with Prisma ORM for user authentication, SQLite for stock data
 - **Authentication**: JWT with bcrypt password hashing
 - **Security**: Helmet.js, csurf, DOMPurify
 - **Templating**: EJS (Embedded JavaScript)
+- **Excel Processing**: ExcelJS for reading and writing Excel files
+- **Real-time Communication**: Socket.IO for WebSocket connections
+- **Financial Data**: yahoo-finance2 for fetching stock market data
 
 ### Frontend Technology Stack
 - **Styling**: Tailwind CSS
@@ -54,6 +78,7 @@ The application is a secure web platform that provides user authentication and p
 - **Token Model**: Manages refresh tokens with expiration dates
 - **Relationships**: Foreign key relationship between User and Token models
 - **Constraints**: Unique constraints on email and username fields
+- **SQLite Database**: Separate SQLite database for storing comprehensive stock market data including OHLCV (Open, High, Low, Close, Volume) information
 
 ### Security Implementation
 - **Dual-Token System**: 15-minute access tokens, 30-day refresh tokens
@@ -70,6 +95,8 @@ The application is a secure web platform that provides user authentication and p
 4. **Database Module**: Interfaces with PostgreSQL through Prisma ORM
 5. **UI Module**: Provides responsive templates and client-side interactivity
 6. **Components Module**: Reusable UI components for consistent design
+7. **Excel Automation Module**: Handles Excel file upload, processing, editing, and export
+8. **Live Stock Data Module**: Manages real-time stock data fetching, storage, and display
 
 ### Middleware Layers
 1. **CSP Nonce Middleware**: Generates unique nonces for Content Security Policy
@@ -84,6 +111,8 @@ The application is a secure web platform that provides user authentication and p
 3. **Session UI**: Token expiration timer with automatic refresh
 4. **Feedback UI**: Alert auto-dismissal after timeout
 5. **Reusable Components**: Modular UI elements (Alerts, Buttons, Cards, etc.)
+6. **Excel Automation UI**: Drag-and-drop upload, interactive table editor, filtering controls
+7. **Live Stock UI**: Real-time data display, WebSocket integration, detailed stock insights
 
 ## Data Flow
 
@@ -139,6 +168,16 @@ The application is a secure web platform that provides user authentication and p
 ### Protected Endpoints
 - `GET /profile` - User profile page
 - `GET /settings` - Account settings page
+- `GET /excel` - Excel automation page
+- `POST /excel/upload` - Upload Excel file
+- `POST /excel/process` - Process Excel file in memory
+- `POST /excel/select-sheet` - Select worksheet from multi-sheet file
+- `POST /excel/save` - Save edited data
+- `GET /excel/export/:id` - Export data to Excel file
+- `GET /live-stock` - Live stock data page
+- `GET /live-stock/symbols` - Get all stock symbols
+- `GET /live-stock/live-data` - Get live data for all symbols
+- `GET /live-stock/live-data/:symbol` - Get live data for a specific symbol
 
 ## Security Measures
 
@@ -233,6 +272,12 @@ The application is a secure web platform that provides user authentication and p
 - Notification system
 - Activity logging
 - Additional reusable components
+- Advanced Excel formulas and calculations
+- Pivot table functionality for Excel data
+- Charting and visualization for Excel data
+- Advanced stock screening and filtering options
+- Portfolio tracking and performance analysis
+- Customizable watchlists for stock monitoring
 
 ### Performance Improvements
 - Redis caching for frequently accessed data

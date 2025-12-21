@@ -69,6 +69,8 @@ Authentication tokens stored with:
 - Unique constraints on email and username
 - Foreign key relationships for data integrity
 - Automatic cleanup of expired tokens
+- SQLite database for stock data with prepared statements
+- Indexed queries for efficient data retrieval
 
 ## Identified Vulnerabilities
 
@@ -97,6 +99,17 @@ Authentication tokens stored with:
 - Add "logout everywhere" functionality
 - Provide session activity history
 
+### 4. Excel Automation Security
+**Severity**: Medium  
+**Description**: New file upload functionality introduces potential security risks.  
+**Impact**: Possible malicious file upload or resource exhaustion.  
+**Recommendations**:
+- Maintain strict file type validation (only .xlsx and .xls)
+- Enforce file size limits (5MB) to prevent resource exhaustion
+- Process files in memory rather than saving to disk
+- Implement proper error handling for malformed files
+- Continue CSRF protection for all upload endpoints
+
 ### 4. Content Security Policy
 **Severity**: Low  
 **Description**: Using 'unsafe-inline' for styles due to TailwindCSS requirements.  
@@ -109,22 +122,40 @@ Authentication tokens stored with:
 **Impact**: Potential information disclosure.  
 **Recommendation**: Implement more specific error handling without exposing sensitive information.
 
+### 6. Live Stock Data Security
+**Severity**: Medium  
+**Description**: Integration with external APIs and real-time data introduces potential security risks.  
+**Impact**: Possible data leakage or denial of service through API abuse.  
+**Recommendations**:
+- Implement rate limiting for Yahoo Finance API calls
+- Use batch processing to comply with API rate limits
+- Secure WebSocket connections with proper authentication
+- Validate and sanitize all data received from external APIs
+- Implement proper error handling for API failures
+- Continue CSRF protection for all data modification endpoints
+
 ## Security Recommendations
 
 ### Immediate Actions
 1. **Implement Rate Limiting**: Add rate limiting middleware to authentication endpoints to prevent brute force attacks
 2. **Enhance Password Policies**: Implement password strength requirements
 3. **Add Account Lockout**: Implement account lockout after multiple failed login attempts
+4. **File Upload Security**: Review and enhance file upload security measures for Excel Automation
+5. **API Rate Limiting**: Ensure proper rate limiting for external API integrations in Live Stock Data
 
 ### Short-term Improvements
 1. **Email Verification**: Add email verification for new account registration
 2. **Two-Factor Authentication**: Implement 2FA for enhanced security
 3. **Session Management**: Add comprehensive session management features
+4. **Excel File Validation**: Implement additional validation for Excel file contents
+5. **WebSocket Security**: Enhance security measures for real-time data connections
 
 ### Long-term Enhancements
 1. **Security Logging**: Implement comprehensive security event logging
 2. **Audit Trail**: Add audit trail for sensitive operations
 3. **Advanced Threat Protection**: Implement advanced threat detection mechanisms
+4. **File Content Scanning**: Implement scanning of uploaded Excel files for malicious content
+5. **API Security Monitoring**: Implement monitoring and alerting for external API usage patterns
 
 ## Dependency Security Analysis
 
@@ -134,6 +165,11 @@ Authentication tokens stored with:
 - **csurf**: Established CSRF protection library
 - **helmet**: Comprehensive security headers implementation
 - **dompurify**: Trusted XSS prevention library
+- **exceljs**: Well-maintained Excel file processing library
+- **multer**: Established file upload handling middleware
+- **socket.io**: Mature WebSocket library with security features
+- **yahoo-finance2**: Actively maintained Yahoo Finance API client
+- **better-sqlite3**: Efficient and secure SQLite database driver
 
 ### Potential Concerns
 - Regular dependency updates should be performed
@@ -157,6 +193,8 @@ Authentication tokens stored with:
 - Passwords hashed with bcrypt
 - No sensitive data stored in plain text
 - Database connections secured with environment variables
+- Stock market data stored in separate SQLite database
+- Session data stored securely with proper encryption
 
 ### Data in Transit
 - HTTPS encryption for production environments
@@ -169,6 +207,8 @@ Authentication tokens stored with:
 - Minimal data collection
 - User data deletion capability through account removal
 - Consider implementing data export functionality
+- Stock market data usage complies with financial data regulations
+- File upload data is processed in memory and not permanently stored
 
 ### Other Regulations
 - Application follows general security best practices
@@ -194,5 +234,7 @@ However, several improvements could further enhance the security posture:
 2. Add advanced account security features
 3. Enhance session management capabilities
 4. Improve error handling specificity
+5. Enhance file upload security measures
+6. Implement additional API security for external integrations
 
 Overall, the application follows security best practices and provides robust protection against common web vulnerabilities including XSS, CSRF, and session hijacking. With the recommended enhancements, it would achieve an excellent security posture suitable for production deployment.

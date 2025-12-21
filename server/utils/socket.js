@@ -1,6 +1,7 @@
 const socketIO = require('socket.io');
 const jwt = require('jsonwebtoken');
 const { jwtSecret } = require('../config/authConfig');
+const liveStockEvents = require('./live-stock/events');
 
 class SocketService {
   constructor() {
@@ -98,6 +99,9 @@ class SocketService {
     this.io.on('connection', (socket) => {
       console.log('Client connected:', socket.id);
 
+      // Emit event for new socket connection
+      liveStockEvents.emit('newSocketConnection', socket);
+
       socket.on('joinStockRoom', (symbol, cb) => {
         if (!this.validateStockSymbol(symbol)) {
           cb?.({ success: false, error: 'Invalid stock symbol' });
@@ -111,6 +115,12 @@ class SocketService {
         if (this.validateStockSymbol(symbol)) {
           socket.leave(`stock-${symbol}`);
         }
+      });
+      
+      // Handle request for top performers data
+      socket.on('requestTopPerformers', () => {
+        // This will be handled by the background updater which broadcasts the data
+        console.log('Client requested top performers data');
       });
 
       socket.on('disconnect', (reason) => {
@@ -138,6 +148,10 @@ class SocketService {
   }
 
   broadcast(event, data) {
+    this.io.emit(event, data);
+  }
+  
+  broadcastEvent(event, data) {
     this.io.emit(event, data);
   }
 }

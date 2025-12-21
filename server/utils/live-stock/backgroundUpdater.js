@@ -2,6 +2,8 @@ const fs = require('fs');
 const path = require('path');
 const { fetchLiveDataBatch } = require('./yahooFinanceFetcher');
 const socketService = require('../socket');
+const { calculateTopPerformers } = require('./topPerformers');
+const liveStockEvents = require('./events');
 
 // Background update interval (5 minutes in milliseconds)
 const UPDATE_INTERVAL = 5 * 60 * 1000; // 5 minutes
@@ -23,12 +25,55 @@ let progressCallbacks = [];
 // Store for incremental data callbacks
 let dataCallbacks = [];
 
+// Store for new socket connection callbacks
+let socketConnectionCallbacks = [];
+
 // In-memory live data store
 let symbolList = [];
 let liveDataMap = new Map(); // key: yahooSymbol, value: latest data
 
 // Symbol validation (Yahoo room names / fetch)
 const VALID_SYMBOL_RE = /^[A-Z0-9.\-]+$/i;
+
+// Function to broadcast top performers
+function broadcastTopPerformers() {
+  try {
+    const { gainers, losers } = calculateTopPerformers(liveDataMap);
+    console.log(`Broadcasting top performers - Gainers: ${gainers.length}, Losers: ${losers.length}`);
+    
+    // Broadcast to all connected clients
+    socketService?.broadcastEvent?.('topPerformers', {
+      gainers,
+      losers,
+      timestamp: new Date().toISOString()
+    });
+    
+    console.log(`Broadcasted top performers: ${gainers.length} gainers, ${losers.length} losers`);
+  } catch (error) {
+    console.error('Error broadcasting top performers:', error.message);
+  }
+}
+
+// Function to send top performers to a specific socket
+function sendTopPerformersToSocket(socket) {
+  try {
+    const { gainers, losers } = calculateTopPerformers(liveDataMap);
+    console.log(`Calculated top performers - Gainers: ${gainers.length}, Losers: ${losers.length}`);
+    
+    if (gainers && losers && (gainers.length > 0 || losers.length > 0)) {
+      socket.emit('topPerformers', {
+        gainers,
+        losers,
+        timestamp: new Date().toISOString()
+      });
+      console.log('Sent top performers to socket');
+    } else {
+      console.log('No top performers to send');
+    }
+  } catch (error) {
+    console.error('Error sending top performers to socket:', error.message);
+  }
+}
 
 // Load symbols from the public JSON file
 function loadSymbolList() {
@@ -75,6 +120,11 @@ function subscribeToProgress(callback) {
 // Function to subscribe to data updates
 function subscribeToDataUpdates(callback) {
   dataCallbacks.push(callback);
+}
+
+// Function to subscribe to new socket connections
+function subscribeToSocketConnections(callback) {
+  socketConnectionCallbacks.push(callback);
 }
 
 // Function to notify progress updates
@@ -224,6 +274,10 @@ async function performBackgroundUpdate() {
       console.log('Background update completed.');
       notifyProgress(); // Notify completion
       
+      // Broadcast top performers after successful batch completion
+      broadcastTopPerformers();
+      
+      
     } catch (error) {
       console.error('Error in background update:', error.message);
       notifyProgress(); // Notify error
@@ -256,6 +310,11 @@ async function performBackgroundUpdate() {
 // Function to start the background updater
 function startBackgroundUpdater() {
   console.log(`Starting background updater with ${UPDATE_INTERVAL/1000/60} minute interval`);
+  
+  // Listen for new socket connections
+  liveStockEvents.on('newSocketConnection', (socket) => {
+    sendTopPerformersToSocket(socket);
+  });
   
   // Track if we're currently performing an update
   let isUpdating = false;
@@ -290,5 +349,7 @@ module.exports = {
   getUpdateProgress,
   subscribeToProgress,
   subscribeToDataUpdates,
-  getLiveSnapshot
+  subscribeToSocketConnections,
+  getLiveSnapshot,
+  sendTopPerformersToSocket
 };

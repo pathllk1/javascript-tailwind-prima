@@ -124,6 +124,43 @@ Shows navigation hierarchy for better UX.
 **Parameters:**
 - `items`: Array of breadcrumb items [{text, href}] (required)
 
+## Excel Automation Components
+
+### 1. Table Component
+Interactive table for displaying and editing Excel data.
+
+**Location:** `views/components/excel-automation/table.ejs`
+
+**Usage:**
+```ejs
+<%- include('../components/excel-automation/table', {tableId: 'excel-table', data: tableData}) %>
+```
+
+**Parameters:**
+- `tableId`: Unique identifier for the table element (required)
+- `data`: JSON object containing headers and rows data (required)
+
+**Features:**
+- Editable cells with double-click or Enter key
+- Data type detection for appropriate formatting
+- Column sorting capabilities
+- Responsive design for different screen sizes
+- Integration with filtering system
+
+## Live Stock Data Components
+
+### 1. Stock Table Component
+Interactive table for displaying real-time stock market data.
+
+**Location:** Part of `views/pages/live-stock/index.ejs`
+
+**Features:**
+- Real-time updates via WebSocket
+- Color-coded change percentages (green for positive, red for negative)
+- Detailed stock insights on click
+- Search and sort functionality
+- Responsive design for different screen sizes
+
 ## Implementation Examples
 
 ### Using Components in Pages
@@ -235,18 +272,24 @@ document.querySelectorAll('.close-modal').forEach(button => {
 2. Use parameters to customize behavior
 3. Document all parameters clearly
 4. Provide sensible defaults
+5. Organize components by feature in subdirectories
+6. Maintain consistency in parameter naming across similar components
 
 ### Performance Considerations
 1. Only include components when needed
 2. Avoid deeply nested components
 3. Minimize logic within components
 4. Use EJS includes instead of embedding HTML
+5. Implement virtual scrolling for large data tables
+6. Optimize data transfer for real-time components
 
 ### Accessibility
 1. Use semantic HTML elements
 2. Include proper ARIA attributes
 3. Ensure keyboard navigation
 4. Provide sufficient color contrast
+5. Support screen readers for data tables
+6. Ensure color-coded information is also text-based
 
 ## Troubleshooting
 
@@ -255,6 +298,8 @@ document.querySelectorAll('.close-modal').forEach(button => {
 2. **Styling issues**: Verify Tailwind classes are correct and not conflicting
 3. **JavaScript not working**: Ensure the component's JavaScript is included in the page
 4. **EJS Syntax Errors**: When nesting components, ensure proper syntax and avoid complex multiline strings
+5. **Data not displaying**: For data-intensive components, verify data format and structure
+6. **Real-time updates not working**: Check WebSocket connection and event handling
 
 ### Debugging Tips
 1. Use browser developer tools to inspect component HTML
@@ -274,10 +319,12 @@ When working with components that contain other components:
 ### Creating New Components
 To create a new component:
 
-1. Create a new `.ejs` file in `views/components/`
+1. Create a new `.ejs` file in `views/components/` or appropriate subdirectory
 2. Add a comment block documenting parameters
 3. Implement the component logic
 4. Test in various contexts
+5. Ensure proper integration with JavaScript functionality
+6. Verify accessibility and responsiveness
 
 ### Example Component Template
 ```ejs
