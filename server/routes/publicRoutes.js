@@ -15,6 +15,15 @@ router.get('/about', (req, res) => {
   });
 });
 
+// Live stock page
+router.get('/live-stock', (req, res) => {
+  res.render('pages/live-stock/index', { 
+    title: 'Live Stock Data', 
+    user: req.user || null,
+    tokenExpiration: req.tokenExpiration || null
+  });
+});
+
 // Contact page (apply CSRF protection only to POST requests that modify data)
 router.get('/contact', csrfTokenMiddleware, publicController.contact);
 router.post('/contact', csrfProtection, publicController.contactPost);

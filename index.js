@@ -24,6 +24,7 @@ const { getRealm } = require('./server/database/realm');
 const app = express();
 const server = http.createServer(app);
 const PORT = process.env.PORT || 3000;
+const HOST = process.env.HOST || 'localhost';
 
 // Initialize Socket.IO service
 const io = socketService.initialize(server);
@@ -83,6 +84,10 @@ app.use('/', publicRoutes);
 const authRoutes = require('./server/routes/authRoutes');
 app.use('/auth', authRoutes);
 
+// Protected routes (require authentication and have CSRF protection)
+const protectedRoutes = require('./server/routes/protectedRoutes');
+app.use('/', protectedRoutes);
+
 // Initialize Realm database connection
 (async () => {
   try {
@@ -100,10 +105,6 @@ app.use('/auth', authRoutes);
   }
 })();
 
-// Protected routes (require authentication and have CSRF protection)
-const protectedRoutes = require('./server/routes/protectedRoutes');
-app.use('/', protectedRoutes);
-
 // Start the background updater for live stock data
 startBackgroundUpdater();
 
@@ -113,7 +114,7 @@ startOhlcvDailyRecorder().catch((error) => {
 });
 
 // Start the server
-server.listen(PORT, () => {
-  console.log(`Server running on http://localhost:${PORT}`);
+server.listen(PORT, HOST, () => {
+  console.log(`Server running in ${process.env.NODE_ENV} mode on http://${HOST}:${PORT}`);
   console.log('WebSocket server is running');
 });

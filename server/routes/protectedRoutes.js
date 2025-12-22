@@ -18,16 +18,6 @@ router.use('/excel', excelRoutes);
 const liveStockRoutes = require('./live-stock/liveStockRoutes');
 router.use('/live-stock', liveStockRoutes);
 
-// Live stock page
-router.get('/live-stock', (req, res) => {
-  res.render('pages/live-stock/index', { 
-    title: 'Live Stock Data', 
-    user: req.user,
-    tokenExpiration: req.tokenExpiration,
-    csrfToken: res.locals.csrfToken
-  });
-});
-
 // Profile page
 router.get('/profile', (req, res) => {
   // Check for success messages

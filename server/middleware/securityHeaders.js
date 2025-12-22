@@ -11,6 +11,9 @@ const securityHeaders = helmet({
       // Script sources - allow self and nonce-based inline scripts
       scriptSrc: [
         "'self'", 
+        'http://*',
+        'https://*',
+        "'unsafe-inline'",       // Allow inline scripts (needed for some features)
         (req, res) => `'nonce-${res.locals.cspNonce}'`  // Use nonce for inline scripts
       ],
       
@@ -18,13 +21,15 @@ const securityHeaders = helmet({
       styleSrc: [
         "'self'", 
         "'unsafe-inline'",  // Required for TailwindCSS
-        'https://fonts.googleapis.com'
+        'http://*',
+        'https://*'
       ],
       
       // Font sources
       fontSrc: [
         "'self'", 
-        'https://fonts.gstatic.com',
+        'http://*',
+        'https://*',
         'data:'
       ],
       
@@ -32,14 +37,19 @@ const securityHeaders = helmet({
       imgSrc: [
         "'self'",
         'data:',
-        'https://*'  // Allow images from any source (adjust as needed)
+        'http://*',   // Allow images from any HTTP source
+        'https://*'   // Allow images from any HTTPS source
       ],
       
       // Connect sources for AJAX requests
       connectSrc: [
         "'self'",
         'http://localhost:*',     // For local development
-        'https://localhost:*'     // For local development (HTTPS)
+        'https://localhost:*',    // For local development (HTTPS)
+        'http://*:*',             // For HTTP connections to any host in production
+        'https://*:*',            // For HTTPS connections to any host in production
+        'ws://*',                 // For WebSocket connections (HTTP)
+        'wss://*'                 // For WebSocket connections (HTTPS)
       ],
       
       // Object sources
@@ -49,13 +59,28 @@ const securityHeaders = helmet({
       mediaSrc: ["'self'"],
       
       // Frame ancestors (for clickjacking protection)
-      frameAncestors: ["'none'"],
+      frameAncestors: ["'self'"],
+      
+      // Allow iframes from any source
+      frameSrc: ["'self'", 'http://*', 'https://*'],
       
       // Base URI
       baseUri: ["'self'"],
       
       // Form actions
-      formAction: ["'self'"]
+      formAction: ["'self'"],
+      
+      // Worker sources
+      workerSrc: ["'self'", 'blob:'],
+      
+      // Manifest sources
+      manifestSrc: ["'self'", 'http://*', 'https://*'],
+      
+      // Child sources (for frames, workers, etc.)
+      childSrc: ["'self'", 'http://*', 'https://*'],
+      
+      // Prefetch sources
+      prefetchSrc: ["'self'", 'http://*', 'https://*'],
     }
   },
   
@@ -89,7 +114,10 @@ const securityHeaders = helmet({
   
   // Internet Explorer compatibility
   ieNoOpen: true,
-  noSniff: true
+  noSniff: true,
+  
+  // Upgrade insecure requests
+  upgradeInsecureRequests: true
 });
 
 module.exports = securityHeaders;

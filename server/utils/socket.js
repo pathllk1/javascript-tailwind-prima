@@ -36,7 +36,7 @@ class SocketService {
     this.io = socketIO(server, {
       cors: {
         origin: process.env.NODE_ENV === 'production'
-          ? process.env.FRONTEND_URL || 'http://localhost:3000'
+          ? process.env.FRONTEND_URL || true  // Allow any origin in production
           : 'http://localhost:3000',
         methods: ['GET', 'POST'],
         credentials: true
