@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const { getSymbols, getCachedData, getUpdateProgressEndpoint, getRecentUpdates, getLiveData, getLiveSymbolData, getSymbolInsights, getSymbolChart } = require('../../controller/live-stock/liveStockController');
+const { getSymbols, getCachedData, getUpdateProgressEndpoint, getRecentUpdates, getLiveData, getLiveSymbolData, getSymbolInsights, getSymbolChart, getSymbolOhlcvData, getSymbolTechIndicators } = require('../../controller/live-stock/liveStockController');
 
 // Route to get all symbols
 router.get('/symbols', getSymbols);
@@ -25,5 +25,11 @@ router.get('/live-data/:symbol/chart', getSymbolChart);
 
 // Route to get deep insights for a specific symbol (chart, fundamentals, options, insider, recommendations)
 router.get('/live-data/:symbol/insights', getSymbolInsights);
+
+// Route to get OHLCV data for a specific symbol from database
+router.get('/live-data/:symbol/ohlcv', getSymbolOhlcvData);
+
+// Route to get technical indicators for a specific symbol
+router.get('/live-data/:symbol/tech-indicators', getSymbolTechIndicators);
 
 module.exports = router;

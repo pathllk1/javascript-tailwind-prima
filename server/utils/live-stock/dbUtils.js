@@ -1,105 +1,118 @@
-const Database = require('better-sqlite3');
+const Realm = require('realm');
 const path = require('path');
 
-// Database path
-const DB_PATH = path.join(__dirname, '..', '..', 'database', 'yahoo_finance_data.db');
+// Schema definitions for OHLCV data
+const SymbolSchema = {
+  name: 'Symbol',
+  primaryKey: 'symbol',
+  properties: {
+    symbol: 'string',
+    yahooSymbol: { type: 'string', indexed: true },
+    series: 'string?',
+    currentPrice: 'double?',
+    lastUpdated: 'date?',
+    fetchStatus: 'string?',
+    ohlcvLastDate: { type: 'string', indexed: true, optional: true },
+  },
+};
 
-// Initialize database
-let db;
+const OHLCVSchema = {
+  name: 'OHLCV',
+  primaryKey: 'id',
+  properties: {
+    id: 'string',
+    symbol: { type: 'string', indexed: true },
+    date: { type: 'string', indexed: true },
+    open: 'double?',
+    high: 'double?',
+    low: 'double?',
+    close: 'double?',
+    volume: 'int?',
+  },
+};
 
-try {
-  db = new Database(DB_PATH);
-  console.log('Database connected successfully');
-} catch (error) {
-  console.error('Error connecting to database:', error.message);
-  process.exit(1);
+const IngestMetaSchema = {
+  name: 'IngestMeta',
+  primaryKey: 'key',
+  properties: {
+    key: 'string',
+    value: 'string?',
+    updatedAt: 'date',
+  },
+};
+
+// Path to the OHLCV Realm database
+const REALM_FILE = path.join(__dirname, '../../../data/yahoo_finance_ohlcv.realm');
+
+let realmPromise = null;
+
+// Function to open the OHLCV Realm database
+async function openOhlcvRealm() {
+  if (realmPromise) return realmPromise;
+  realmPromise = Realm.open({
+    path: REALM_FILE,
+    schema: [SymbolSchema, OHLCVSchema, IngestMetaSchema],
+    schemaVersion: 2,
+    migration() {},
+  });
+  return realmPromise;
 }
 
-// Ensure schema has required columns for market data
-function ensureSchema() {
-  const info = db.prepare(`PRAGMA table_info(symbols);`).all();
-  const existing = new Set(info.map((c) => c.name));
-  const missingClauses = [];
-  if (!existing.has('previous_close')) missingClauses.push('previous_close REAL');
-  if (!existing.has('day_high')) missingClauses.push('day_high REAL');
-  if (!existing.has('day_low')) missingClauses.push('day_low REAL');
-  if (!existing.has('volume')) missingClauses.push('volume INTEGER');
-  if (!existing.has('currency')) missingClauses.push('currency TEXT');
-  if (!existing.has('last_updated')) missingClauses.push('last_updated TEXT');
-  if (missingClauses.length > 0) {
-    missingClauses.forEach((clause) => {
-      try {
-        db.exec(`ALTER TABLE symbols ADD COLUMN ${clause};`);
-        console.log(`Schema updated: ADD COLUMN ${clause}`);
-      } catch (e) {
-        // ignore "duplicate column name" to be idempotent
-        if (!/duplicate column name/i.test(e.message)) {
-          console.error('Schema alter error:', e.message);
-        }
-      }
-    });
-  }
-}
-
-ensureSchema();
-
-// Function to get all symbols from the database (including cached market fields)
-function getAllSymbols() {
+// Function to fetch OHLCV data for a specific symbol
+async function fetchOhlcvDataForSymbol(symbol) {
   try {
-    const symbols = db.prepare('SELECT * FROM symbols ORDER BY symbol').all();
-    return symbols;
-  } catch (error) {
-    console.error('Error fetching symbols:', error.message);
-    return [];
-  }
-}
-
-// Function to get symbol by yahoo symbol
-function getSymbolByYahooSymbol(yahooSymbol) {
-  try {
-    const symbol = db.prepare('SELECT * FROM symbols WHERE yahoo_symbol = ?').get(yahooSymbol);
-    return symbol;
-  } catch (error) {
-    console.error('Error fetching symbol:', error.message);
-    return null;
-  }
-}
-
-// Function to update symbol data
-function updateSymbolData(symbolData) {
-  try {
-    const stmt = db.prepare(`
-      UPDATE symbols 
-      SET 
-        current_price = ?,
-        previous_close = COALESCE(?, previous_close),
-        day_high = COALESCE(?, day_high),
-        day_low = COALESCE(?, day_low),
-        volume = COALESCE(?, volume),
-        currency = COALESCE(?, currency),
-        last_updated = ?
-      WHERE yahoo_symbol = ?
-    `);
+    const realm = await openOhlcvRealm();
     
-    return stmt.run(
-      symbolData.currentPrice,
-      symbolData.previousClose ?? null,
-      symbolData.dayHigh ?? null,
-      symbolData.dayLow ?? null,
-      symbolData.volume ?? null,
-      symbolData.currency ?? null,
-      new Date().toISOString(),
-      symbolData.yahooSymbol
-    );
+    // Query OHLCV data for the symbol, sorted by date descending
+    const ohlcvData = realm.objects('OHLCV')
+      .filtered('symbol == $0', symbol)
+      .sorted('date', true); // true for descending order
+    
+    // Convert to plain JavaScript objects
+    return ohlcvData.map(record => ({
+      id: record.id,
+      symbol: record.symbol,
+      date: record.date,
+      open: record.open,
+      high: record.high,
+      low: record.low,
+      close: record.close,
+      volume: record.volume
+    }));
   } catch (error) {
-    console.error('Error updating symbol data:', error.message);
-    return null;
+    console.error(`Error fetching OHLCV data for symbol ${symbol}:`, error);
+    throw error;
+  }
+}
+
+// Function to get symbol information
+async function getSymbolInfo(symbol) {
+  try {
+    const realm = await openOhlcvRealm();
+    
+    // Query symbol information
+    const symbolObj = realm.objectForPrimaryKey('Symbol', symbol);
+    
+    if (!symbolObj) {
+      return null;
+    }
+    
+    return {
+      symbol: symbolObj.symbol,
+      yahooSymbol: symbolObj.yahooSymbol,
+      series: symbolObj.series,
+      currentPrice: symbolObj.currentPrice,
+      lastUpdated: symbolObj.lastUpdated,
+      fetchStatus: symbolObj.fetchStatus,
+      ohlcvLastDate: symbolObj.ohlcvLastDate
+    };
+  } catch (error) {
+    console.error(`Error fetching symbol info for ${symbol}:`, error);
+    throw error;
   }
 }
 
 module.exports = {
-  getAllSymbols,
-  getSymbolByYahooSymbol,
-  updateSymbolData,
-  db
+  fetchOhlcvDataForSymbol,
+  getSymbolInfo
 };

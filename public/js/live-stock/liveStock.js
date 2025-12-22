@@ -45,9 +45,14 @@ function initializeLiveStock() {
     let modalCloseBtn = null;
     let modalTabMainBtn = null;
     let modalTabDataBtn = null;
+    let modalTabTechBtn = null;
     let modalPanelMain = null;
     let modalPanelData = null;
+    let modalPanelTech = null;
     let insightsChartInstance = null;
+    // OHLCV data view variables
+    let currentOhlcvData = [];
+    let currentSortConfig = { sortBy: 'date', sortOrder: 'desc' };
 
     // Initialize modal hooks early
     ensureModal();
@@ -295,13 +300,24 @@ function initializeLiveStock() {
 
     function ensureModal() {
         if (modalEl) return;
-        modalEl = document.getElementById('stock-modal');
-        modalContentEl = document.getElementById('stock-modal-content');
-        modalCloseBtn = document.getElementById('stock-modal-close');
-        modalTabMainBtn = document.getElementById('stock-modal-tab-main');
-        modalTabDataBtn = document.getElementById('stock-modal-tab-data');
-        modalPanelMain = document.getElementById('stock-modal-panel-main');
-        modalPanelData = document.getElementById('stock-modal-panel-data');
+        
+        // Safely get DOM elements, ensuring no errors if elements don't exist
+        try {
+            modalEl = document.getElementById('stock-modal');
+            modalContentEl = document.getElementById('stock-modal-content');
+            modalCloseBtn = document.getElementById('stock-modal-close');
+            modalTabMainBtn = document.getElementById('stock-modal-tab-main');
+            modalTabDataBtn = document.getElementById('stock-modal-tab-data');
+            modalTabTechBtn = document.getElementById('stock-modal-tab-tech') || null;
+            modalPanelMain = document.getElementById('stock-modal-panel-main');
+            modalPanelData = document.getElementById('stock-modal-panel-data');
+            modalPanelTech = document.getElementById('stock-modal-panel-tech') || null;
+        } catch (e) {
+            console.error('Error initializing modal elements:', e);
+            return;
+        }
+        
+        // Add event listeners only if elements exist
         if (modalCloseBtn) {
             modalCloseBtn.addEventListener('click', closeModal);
         }
@@ -316,35 +332,513 @@ function initializeLiveStock() {
         if (modalTabDataBtn) {
             modalTabDataBtn.addEventListener('click', () => setModalTab('data'));
         }
+        if (modalTabTechBtn) {
+            modalTabTechBtn.addEventListener('click', () => setModalTab('tech'));
+        }
     }
 
     function setModalTab(tab) {
+        // Check if required elements exist
         if (!modalTabMainBtn || !modalTabDataBtn || !modalPanelMain || !modalPanelData) return;
+        
+        // For tech tab, also check tech elements
+        if (tab === 'tech' && (!modalTabTechBtn || !modalPanelTech)) return;
 
         const isMain = tab === 'main';
+        const isData = tab === 'data';
+        const isTech = tab === 'tech';
 
-        modalPanelMain.classList.toggle('hidden', !isMain);
-        modalPanelData.classList.toggle('hidden', isMain);
+        // Toggle panel visibility
+        if (modalPanelMain) modalPanelMain.classList.toggle('hidden', !isMain);
+        if (modalPanelData) modalPanelData.classList.toggle('hidden', !isData);
+        if (modalPanelTech) modalPanelTech.classList.toggle('hidden', !isTech);
 
-        modalTabMainBtn.classList.toggle('bg-gray-900', isMain);
-        modalTabMainBtn.classList.toggle('text-white', isMain);
-        modalTabMainBtn.classList.toggle('bg-gray-100', !isMain);
-        modalTabMainBtn.classList.toggle('text-gray-700', !isMain);
-        modalTabMainBtn.classList.toggle('hover:bg-gray-200', !isMain);
+        // Update main tab styling
+        if (modalTabMainBtn) {
+            modalTabMainBtn.classList.toggle('bg-gray-900', isMain);
+            modalTabMainBtn.classList.toggle('text-white', isMain);
+            modalTabMainBtn.classList.toggle('bg-gray-100', !isMain);
+            modalTabMainBtn.classList.toggle('text-gray-700', !isMain);
+            modalTabMainBtn.classList.toggle('hover:bg-gray-200', !isMain);
+        }
 
-        modalTabDataBtn.classList.toggle('bg-gray-900', !isMain);
-        modalTabDataBtn.classList.toggle('text-white', !isMain);
-        modalTabDataBtn.classList.toggle('bg-gray-100', isMain);
-        modalTabDataBtn.classList.toggle('text-gray-700', isMain);
-        modalTabDataBtn.classList.toggle('hover:bg-gray-200', isMain);
-    }
-
-    function closeModal() {
+        // Update data tab styling
+        if (modalTabDataBtn) {
+            modalTabDataBtn.classList.toggle('bg-gray-900', isData);
+            modalTabDataBtn.classList.toggle('text-white', isData);
+            modalTabDataBtn.classList.toggle('bg-gray-100', !isData);
+            modalTabDataBtn.classList.toggle('text-gray-700', !isData);
+            modalTabDataBtn.classList.toggle('hover:bg-gray-200', !isData);
+        }
+        
+        // Update tech tab styling
+        if (modalTabTechBtn) {
+            modalTabTechBtn.classList.toggle('bg-gray-900', isTech);
+            modalTabTechBtn.classList.toggle('text-white', isTech);
+            modalTabTechBtn.classList.toggle('bg-gray-100', !isTech);
+            modalTabTechBtn.classList.toggle('text-gray-700', !isTech);
+            modalTabTechBtn.classList.toggle('hover:bg-gray-200', !isTech);
+        }
+        
+        // If switching to data tab, load OHLCV data
+        if (isData) {
+            loadDataView();
+        }
+        
+        // If switching to tech tab, load technical indicators
+        if (isTech) {
+            loadTechIndicators();
+        }
+    }    function closeModal() {
         if (insightsChartInstance) {
             insightsChartInstance.destroy();
             insightsChartInstance = null;
         }
         if (modalEl) modalEl.classList.add('hidden');
+    }
+
+    // Variable to store current symbol for data view
+    let currentDataViewSymbol = null;
+    // Variable to store current symbol for tech indicators view
+    let currentTechViewSymbol = null;
+
+    // Function to load and display OHLCV data in the data view tab
+    async function loadDataView() {
+        if (!modalPanelData) return;
+        
+        // Show loading indicator
+        modalPanelData.innerHTML = `
+            <div class="font-semibold text-gray-900 mb-3">Historical Data</div>
+            <div class="flex items-center justify-center h-64">
+                <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
+                <span class="ml-3 text-gray-600">Loading historical data...</span>
+            </div>
+        `;
+        
+        try {
+            // Get the current symbol from the main panel
+            const symbolHeader = document.querySelector('#stock-modal-content h3');
+            if (!symbolHeader) {
+                throw new Error('Unable to determine symbol');
+            }
+            
+            const symbol = symbolHeader.textContent.trim();
+            currentDataViewSymbol = symbol;
+            
+            // Fetch OHLCV data from the server
+            const response = await fetch(`/live-stock/live-data/${encodeURIComponent(symbol)}/ohlcv`);
+            if (!response.ok) {
+                throw new Error(`Failed to fetch data: ${response.status} ${response.statusText}`);
+            }
+            
+            const result = await response.json();
+            if (!result.success) {
+                throw new Error(result.error || 'Failed to fetch data');
+            }
+            
+            const ohlcvData = result.data;
+            
+            if (!Array.isArray(ohlcvData) || ohlcvData.length === 0) {
+                modalPanelData.innerHTML = `
+                    <div class="font-semibold text-gray-900 mb-3">Historical Data</div>
+                    <div class="text-gray-500 py-8 text-center">No historical data available for ${symbol}</div>
+                `;
+                return;
+            }
+            
+            // Store data for sorting and filtering
+            currentOhlcvData = ohlcvData;
+            
+            // Reset sort config to default
+            currentSortConfig = { sortBy: 'date', sortOrder: 'desc' };
+            
+            // Render the data in a table with default sorting (by date desc)
+            renderOhlcvTable(ohlcvData, symbol, currentSortConfig);
+        } catch (error) {
+            console.error('Error loading data view:', error);
+            modalPanelData.innerHTML = `
+                <div class="font-semibold text-gray-900 mb-3">Historical Data</div>
+                <div class="text-red-500 py-8 text-center">Failed to load historical data: ${error.message}</div>
+            `;
+        }
+    }
+    
+    // Function to load and display technical indicators in the tech view tab
+    async function loadTechIndicators() {
+        if (!modalPanelTech) return;
+        
+        // Show loading indicator
+        modalPanelTech.innerHTML = `
+            <div class="font-semibold text-gray-900 mb-3">Technical Indicators</div>
+            <div class="flex items-center justify-center h-64">
+                <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
+                <span class="ml-3 text-gray-600">Loading technical indicators...</span>
+            </div>
+        `;
+        
+        try {
+            // Get the current symbol from the main panel
+            const symbolHeader = document.querySelector('#stock-modal-content h3');
+            if (!symbolHeader) {
+                throw new Error('Unable to determine symbol');
+            }
+            
+            const symbol = symbolHeader.textContent.trim();
+            currentTechViewSymbol = symbol;
+            
+            // Fetch technical indicators data from the server
+            const response = await fetch(`/live-stock/live-data/${encodeURIComponent(symbol)}/tech-indicators`);
+            if (!response.ok) {
+                throw new Error(`Failed to fetch data: ${response.status} ${response.statusText}`);
+            }
+            
+            const result = await response.json();
+            if (!result.success) {
+                throw new Error(result.error || 'Failed to fetch data');
+            }
+            
+            const techData = result.data;
+            
+            // Render the technical indicators
+            renderTechIndicators(techData, symbol);
+        } catch (error) {
+            console.error('Error loading technical indicators:', error);
+            modalPanelTech.innerHTML = `
+                <div class="font-semibold text-gray-900 mb-3">Technical Indicators</div>
+                <div class="text-red-500 py-8 text-center">Failed to load technical indicators: ${error.message}</div>
+            `;
+        }
+    }
+
+    // Function to render technical indicators
+    function renderTechIndicators(data, symbol) {
+        if (!modalPanelTech) return;
+        
+        // Extract indicators data
+        const rsi = data.rsi || {};
+        const macd = data.macd || {};
+        const ema = data.ema || {};
+        const sma = data.sma || {};
+        
+        // Format the technical indicators data
+        const techHtml = `
+            <div class="font-semibold text-gray-900 mb-3">Technical Indicators for ${symbol}</div>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <!-- RSI Section -->
+                <div class="bg-gradient-to-r from-purple-50 to-indigo-50 border border-purple-200 rounded-lg shadow-sm p-4">
+                    <h3 class="text-lg font-semibold text-purple-800 mb-3">RSI (Relative Strength Index)</h3>
+                    <div class="space-y-2">
+                        <div class="flex justify-between items-center">
+                            <span class="text-gray-700">Current RSI:</span>
+                            <span class="text-lg font-bold ${rsi.value >= 70 ? 'text-red-600' : rsi.value <= 30 ? 'text-green-600' : 'text-gray-800'}">${rsi.value !== undefined ? rsi.value.toFixed(2) : 'N/A'}</span>
+                        </div>
+                        <div class="flex justify-between items-center">
+                            <span class="text-gray-700">Signal:</span>
+                            <span class="font-medium ${rsi.signal === 'Overbought' ? 'text-red-600' : rsi.signal === 'Oversold' ? 'text-green-600' : 'text-gray-800'}">${rsi.signal || 'Neutral'}</span>
+                        </div>
+                        <div class="flex justify-between items-center">
+                            <span class="text-gray-700">Period:</span>
+                            <span class="font-medium text-gray-800">${rsi.period || 'N/A'}</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- MACD Section -->
+                <div class="bg-gradient-to-r from-blue-50 to-cyan-50 border border-blue-200 rounded-lg shadow-sm p-4">
+                    <h3 class="text-lg font-semibold text-blue-800 mb-3">MACD (Moving Average Convergence Divergence)</h3>
+                    <div class="space-y-2">
+                        <div class="flex justify-between items-center">
+                            <span class="text-gray-700">MACD Line:</span>
+                            <span class="text-lg font-bold ${macd.macd >= 0 ? 'text-green-600' : 'text-red-600'}">${macd.macd !== undefined ? macd.macd.toFixed(2) : 'N/A'}</span>
+                        </div>
+                        <div class="flex justify-between items-center">
+                            <span class="text-gray-700">Signal Line:</span>
+                            <span class="font-medium ${macd.signal >= 0 ? 'text-green-600' : 'text-red-600'}">${macd.signal !== undefined ? macd.signal.toFixed(2) : 'N/A'}</span>
+                        </div>
+                        <div class="flex justify-between items-center">
+                            <span class="text-gray-700">Histogram:</span>
+                            <span class="font-medium ${macd.histogram >= 0 ? 'text-green-600' : 'text-red-600'}">${macd.histogram !== undefined ? macd.histogram.toFixed(2) : 'N/A'}</span>
+                        </div>
+                        <div class="flex justify-between items-center">
+                            <span class="text-gray-700">Signal:</span>
+                            <span class="font-medium ${macd.interpretation === 'Bullish' ? 'text-green-600' : macd.interpretation === 'Bearish' ? 'text-red-600' : 'text-gray-800'}">${macd.interpretation || 'Neutral'}</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Moving Averages Section -->
+                <div class="md:col-span-2 bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200 rounded-lg shadow-sm p-4">
+                    <h3 class="text-lg font-semibold text-green-800 mb-3">Moving Averages</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <!-- EMA Section -->
+                        <div class="border border-gray-200 rounded p-3">
+                            <h4 class="font-semibold text-gray-800 mb-2">EMA (Exponential Moving Average)</h4>
+                            <div class="space-y-2">
+                                <div class="flex justify-between items-center">
+                                    <span class="text-gray-700">EMA 20:</span>
+                                    <span class="font-medium ${ema.ema20 >= 0 ? 'text-green-600' : 'text-red-600'}">${ema.ema20 !== undefined ? ema.ema20.toFixed(2) : 'N/A'}</span>
+                                </div>
+                                <div class="flex justify-between items-center">
+                                    <span class="text-gray-700">EMA 50:</span>
+                                    <span class="font-medium ${ema.ema50 >= 0 ? 'text-green-600' : 'text-red-600'}">${ema.ema50 !== undefined ? ema.ema50.toFixed(2) : 'N/A'}</span>
+                                </div>
+                                <div class="flex justify-between items-center">
+                                    <span class="text-gray-700">EMA 200:</span>
+                                    <span class="font-medium ${ema.ema200 >= 0 ? 'text-green-600' : 'text-red-600'}">${ema.ema200 !== undefined ? ema.ema200.toFixed(2) : 'N/A'}</span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- SMA Section -->
+                        <div class="border border-gray-200 rounded p-3">
+                            <h4 class="font-semibold text-gray-800 mb-2">SMA (Simple Moving Average)</h4>
+                            <div class="space-y-2">
+                                <div class="flex justify-between items-center">
+                                    <span class="text-gray-700">SMA 20:</span>
+                                    <span class="font-medium ${sma.sma20 >= 0 ? 'text-green-600' : 'text-red-600'}">${sma.sma20 !== undefined ? sma.sma20.toFixed(2) : 'N/A'}</span>
+                                </div>
+                                <div class="flex justify-between items-center">
+                                    <span class="text-gray-700">SMA 50:</span>
+                                    <span class="font-medium ${sma.sma50 >= 0 ? 'text-green-600' : 'text-red-600'}">${sma.sma50 !== undefined ? sma.sma50.toFixed(2) : 'N/A'}</span>
+                                </div>
+                                <div class="flex justify-between items-center">
+                                    <span class="text-gray-700">SMA 200:</span>
+                                    <span class="font-medium ${sma.sma200 >= 0 ? 'text-green-600' : 'text-red-600'}">${sma.sma200 !== undefined ? sma.sma200.toFixed(2) : 'N/A'}</span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Comparison Section -->
+                        <div class="border border-gray-200 rounded p-3">
+                            <h4 class="font-semibold text-gray-800 mb-2">Price vs MA</h4>
+                            <div class="space-y-2">
+                                <div class="flex justify-between items-center">
+                                    <span class="text-gray-700">Price vs EMA 20:</span>
+                                    <span class="font-medium ${ema.priceVsEma20 === 'Above' ? 'text-green-600' : 'text-red-600'}">${ema.priceVsEma20 || 'N/A'}</span>
+                                </div>
+                                <div class="flex justify-between items-center">
+                                    <span class="text-gray-700">Price vs SMA 20:</span>
+                                    <span class="font-medium ${sma.priceVsSma20 === 'Above' ? 'text-green-600' : 'text-red-600'}">${sma.priceVsSma20 || 'N/A'}</span>
+                                </div>
+                                <div class="flex justify-between items-center">
+                                    <span class="text-gray-700">Trend:</span>
+                                    <span class="font-medium ${ema.trend === 'Bullish' ? 'text-green-600' : ema.trend === 'Bearish' ? 'text-red-600' : 'text-gray-800'}">${ema.trend || 'Neutral'}</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="mt-4 text-xs text-gray-500">
+                <p>Note: Technical indicators are calculated based on historical price data. Values are for informational purposes only and should not be considered as financial advice.</p>
+            </div>
+        `;
+        
+        modalPanelTech.innerHTML = techHtml;
+    }
+    
+    // Function to render OHLCV data in a styled HTML table
+    function renderOhlcvTable(data, symbol, sortConfig = { sortBy: 'date', sortOrder: 'desc' }) {
+        if (!modalPanelData) return;
+        
+        // Update current sort config
+        currentSortConfig = sortConfig;
+        
+        // Sort data based on sort config
+        const sortedData = [...data].sort((a, b) => {
+            let aValue = a[sortConfig.sortBy];
+            let bValue = b[sortConfig.sortBy];
+            
+            // Special handling for date sorting
+            if (sortConfig.sortBy === 'date') {
+                aValue = new Date(aValue);
+                bValue = new Date(bValue);
+            }
+            
+            // Special handling for change % sorting
+            if (sortConfig.sortBy === 'changePercent') {
+                aValue = a.open && a.close ? ((a.close - a.open) / a.open) * 100 : 0;
+                bValue = b.open && b.close ? ((b.close - b.open) / b.open) * 100 : 0;
+            }
+            
+            // Handle null/undefined values
+            if (aValue === null || aValue === undefined) return 1;
+            if (bValue === null || bValue === undefined) return -1;
+            
+            // Compare values
+            let comparison = 0;
+            if (typeof aValue === 'string') {
+                comparison = aValue.localeCompare(bValue);
+            } else {
+                comparison = aValue - bValue;
+            }
+            
+            return sortConfig.sortOrder === 'desc' ? -comparison : comparison;
+        });
+        
+        // Get sort indicator for headers
+        function getSortIndicator(column) {
+            if (sortConfig.sortBy === column) {
+                return sortConfig.sortOrder === 'asc' ? ' ↑' : ' ↓';
+            }
+            return '';
+        }
+        
+        // Generate table HTML with all enhancements
+        const tableHtml = `
+            <div class="font-semibold text-gray-900 mb-3">Historical Data for ${symbol}</div>
+            
+            <!-- Date Range Filter Controls -->
+            <div class="mb-4 flex flex-wrap gap-2 items-center">
+                <label class="text-sm font-medium text-gray-700">From:</label>
+                <input type="date" id="date-from" class="border rounded px-2 py-1 text-sm" />
+                
+                <label class="text-sm font-medium text-gray-700 ml-2">To:</label>
+                <input type="date" id="date-to" class="border rounded px-2 py-1 text-sm" />
+                
+                <button id="apply-date-filter" class="ml-2 bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded text-sm">Apply</button>
+                <button id="clear-date-filter" class="bg-gray-300 hover:bg-gray-400 text-gray-800 px-3 py-1 rounded text-sm">Clear</button>
+            </div>
+            
+            <style>
+                .scrollbar-styled::-webkit-scrollbar {
+                    width: 8px;
+                }
+                
+                .scrollbar-styled::-webkit-scrollbar-track {
+                    background: #f1f1f1;
+                    border-radius: 4px;
+                }
+                
+                .scrollbar-styled::-webkit-scrollbar-thumb {
+                    background: linear-gradient(to bottom, #4f46e5, #6366f1);
+                    border-radius: 4px;
+                }
+                
+                .scrollbar-styled::-webkit-scrollbar-thumb:hover {
+                    background: linear-gradient(to bottom, #3730a3, #4338ca);
+                }
+                
+                /* Firefox scrollbar styling */
+                .scrollbar-styled {
+                    scrollbar-width: thin;
+                    scrollbar-color: #4f46e5 #f1f1f1;
+                }
+            </style>
+            
+            <div class="overflow-x-auto h-[400px] overflow-y-auto scrollbar-styled">
+                <table class="min-w-full divide-y divide-gray-200 text-sm">
+                    <!-- Enhanced Header with Gradient and Fixed Positioning -->
+                    <thead class="bg-gradient-to-r from-blue-500 to-indigo-600 text-white sticky top-0 z-10 shadow-md">
+                        <tr>
+                            <th class="px-4 py-3 text-left font-medium uppercase tracking-wider cursor-pointer hover:bg-blue-600" data-column="date">
+                                Date${getSortIndicator('date')}
+                            </th>
+                            <th class="px-4 py-3 text-right font-medium uppercase tracking-wider cursor-pointer hover:bg-blue-600" data-column="open">
+                                Open${getSortIndicator('open')}
+                            </th>
+                            <th class="px-4 py-3 text-right font-medium uppercase tracking-wider cursor-pointer hover:bg-blue-600" data-column="high">
+                                High${getSortIndicator('high')}
+                            </th>
+                            <th class="px-4 py-3 text-right font-medium uppercase tracking-wider cursor-pointer hover:bg-blue-600" data-column="low">
+                                Low${getSortIndicator('low')}
+                            </th>
+                            <th class="px-4 py-3 text-right font-medium uppercase tracking-wider cursor-pointer hover:bg-blue-600" data-column="close">
+                                Close${getSortIndicator('close')}
+                            </th>
+                            <th class="px-4 py-3 text-right font-medium uppercase tracking-wider cursor-pointer hover:bg-blue-600" data-column="changePercent">
+                                Change %${getSortIndicator('changePercent')}
+                            </th>
+                            <th class="px-4 py-3 text-right font-medium uppercase tracking-wider cursor-pointer hover:bg-blue-600" data-column="volume">
+                                Volume${getSortIndicator('volume')}
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody class="bg-white divide-y divide-gray-200">
+                        ${sortedData.map(row => {
+                            // Calculate change percentage
+                            const changePercent = row.open && row.close ? ((row.close - row.open) / row.open) * 100 : 0;
+                            const changeClass = changePercent > 0 ? 'text-green-600' : changePercent < 0 ? 'text-red-600' : 'text-gray-500';
+                            
+                            return `
+                                <tr class="hover:bg-gray-50">
+                                    <td class="px-4 py-2 whitespace-nowrap text-gray-900">${formatDate(row.date)}</td>
+                                    <td class="px-4 py-2 whitespace-nowrap text-right text-gray-900">${formatCurrency(row.open)}</td>
+                                    <td class="px-4 py-2 whitespace-nowrap text-right text-gray-900">${formatCurrency(row.high)}</td>
+                                    <td class="px-4 py-2 whitespace-nowrap text-right text-gray-900">${formatCurrency(row.low)}</td>
+                                    <td class="px-4 py-2 whitespace-nowrap text-right text-gray-900">${formatCurrency(row.close)}</td>
+                                    <td class="px-4 py-2 whitespace-nowrap text-right font-medium ${changeClass}">${changePercent.toFixed(2)}%</td>
+                                    <td class="px-4 py-2 whitespace-nowrap text-right text-gray-900">${formatVolume(row.volume)}</td>
+                                </tr>
+                            `;
+                        }).join('')}
+                    </tbody>
+                </table>
+            </div>
+            <div class="mt-2 text-xs text-gray-500 text-right">Showing ${sortedData.length} records</div>
+        `;
+        
+        modalPanelData.innerHTML = tableHtml;
+        
+        // Add event listeners for sorting
+        const headers = modalPanelData.querySelectorAll('th[data-column]');
+        headers.forEach(header => {
+            header.addEventListener('click', () => {
+                const column = header.getAttribute('data-column');
+                const newSortOrder = sortConfig.sortBy === column && sortConfig.sortOrder === 'asc' ? 'desc' : 'asc';
+                const newSortConfig = { sortBy: column, sortOrder: newSortOrder };
+                renderOhlcvTable(data, symbol, newSortConfig);
+            });
+        });
+        
+        // Add event listeners for date filtering
+        const applyFilterBtn = modalPanelData.querySelector('#apply-date-filter');
+        const clearFilterBtn = modalPanelData.querySelector('#clear-date-filter');
+        
+        if (applyFilterBtn) {
+            applyFilterBtn.addEventListener('click', () => applyDateFilter(symbol));
+        }
+        
+        if (clearFilterBtn) {
+            clearFilterBtn.addEventListener('click', () => clearDateFilter(symbol));
+        }
+        
+        // Set current date values if they exist
+        const fromDateInput = modalPanelData.querySelector('#date-from');
+        const toDateInput = modalPanelData.querySelector('#date-to');
+        
+        if (fromDateInput && toDateInput) {
+            // We could set default values here if needed
+        }
+    }
+
+    // Helper function to format date
+    function formatDate(dateString) {
+        if (!dateString) return 'N/A';
+        const date = new Date(dateString);
+        if (isNaN(date.getTime())) return dateString;
+        return date.toLocaleDateString(undefined, { 
+            year: 'numeric', 
+            month: 'short', 
+            day: 'numeric' 
+        });
+    }
+
+    // Helper function to format currency
+    function formatCurrency(value) {
+        if (value === null || value === undefined) return 'N/A';
+        return value.toLocaleString(undefined, {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2
+        });
+    }
+
+    // Helper function to format volume
+    function formatVolume(volume) {
+        if (volume === null || volume === undefined) return 'N/A';
+        return volume.toLocaleString();
     }
 
     function renderChart(canvas, points, symbolLabel) {
@@ -1010,6 +1504,64 @@ function initializeLiveStock() {
         setTimeout(renderTopPerformers, 100);
     } catch (error) {
         console.error('Error during initial data load:', error);
+    }
+    // Helper function to get sort indicator
+    function getSortIndicator(column, sortConfig) {
+        if (sortConfig.sortBy === column) {
+            return sortConfig.sortOrder === 'asc' ? '↑' : '↓';
+        }
+        return '';
+    }
+
+    // Handle sorting
+    function handleSort(column, symbol) {
+        const newSortOrder = currentSortConfig.sortBy === column && currentSortConfig.sortOrder === 'asc' ? 'desc' : 'asc';
+        currentSortConfig = { sortBy: column, sortOrder: newSortOrder };
+        renderOhlcvTable(currentOhlcvData, symbol, currentSortConfig);
+    }
+
+    // Apply date filter
+    function applyDateFilter(symbol) {
+        const fromDateInput = document.getElementById('date-from');
+        const toDateInput = document.getElementById('date-to');
+        
+        if (!fromDateInput || !toDateInput) return;
+        
+        const fromDate = fromDateInput.value;
+        const toDate = toDateInput.value;
+        
+        if (!fromDate && !toDate) return;
+        
+        let filteredData = [...currentOhlcvData];
+        
+        if (fromDate) {
+            const fromDateTime = new Date(fromDate).getTime();
+            filteredData = filteredData.filter(row => {
+                const rowDateTime = new Date(row.date).getTime();
+                return rowDateTime >= fromDateTime;
+            });
+        }
+        
+        if (toDate) {
+            const toDateTime = new Date(toDate).getTime();
+            filteredData = filteredData.filter(row => {
+                const rowDateTime = new Date(row.date).getTime();
+                return rowDateTime <= toDateTime;
+            });
+        }
+        
+        renderOhlcvTable(filteredData, symbol, currentSortConfig);
+    }
+
+    // Clear date filter
+    function clearDateFilter(symbol) {
+        const fromDateInput = document.getElementById('date-from');
+        const toDateInput = document.getElementById('date-to');
+        
+        if (fromDateInput) fromDateInput.value = '';
+        if (toDateInput) toDateInput.value = '';
+        
+        renderOhlcvTable(currentOhlcvData, symbol, currentSortConfig);
     }
 }
 
